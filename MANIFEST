@@ -2,7 +2,7 @@ Changes
 MANIFEST
 Makefile.PL
 README
-test.pl
+t/base_tests.t
 lib/XML/Smart.pm
 lib/XML/Smart/Base64.pm
 lib/XML/Smart/Data.pm

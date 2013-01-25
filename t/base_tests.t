@@ -1,16 +1,15 @@
-#########################
 
-###use Data::Dumper ; print Dumper( $XML->tree ) ;
+use strict                  ;
+use warnings FATAL => 'all' ;
 
-use ExtUtils::MakeMaker qw(prompt) ;
+use Test                    ;
 
-use strict qw(vars) ;
+use ExtUtils::MakeMaker     ;
 
-use Test;
-BEGIN { plan tests => 162 } ;
-use XML::Smart ;
+BEGIN { plan tests => 164 } ;
 
-no warnings ;
+use XML::Smart              ;
+
 
 my $DATA = q`<?xml version="1.0" encoding="iso-8859-1"?>
 <hosts>
@@ -60,7 +59,7 @@ my $DATA = q`<?xml version="1.0" encoding="iso-8859-1"?>
   @order = $XML->{html}{body}{form}->order ;
   ok(join(" ", @order) eq 'br input input br') ;
 
-  my $data = $XML->data( noheader => 1 ) ;
+  $data = $XML->data( noheader => 1 ) ;
   $data =~ s/\s+/ /gs ;
   
   ok($data , q`<html> <head> <title>Blah blah</title> </head> <body> <form> <br/> <input id="0"/> <input id="2"/> <br/> </form> </body> <null/> </html> `) ;
@@ -138,7 +137,7 @@ content2
   
   ok($sub_cont , 'sub_content') ;
   
-  my $data = $XML->data(noheader => 1) ;
+  $data = $XML->data(noheader => 1) ;
   
   skip( ($] >= 5.007 && $] <= 5.008 ? "Skip on $]" : 0 ) ,
   $data , q`<root>123<tag1 arg1="123">
@@ -252,7 +251,7 @@ TEXT1 &amp; more
   $data =~ s/\s//gs ;
   ok($data,'<root><foobar="x"/></root>') ;
   
-  my $XML = XML::Smart->new(q`
+  $XML = XML::Smart->new(q`
   <html><title>TITLE</title>
   <body bgcolor='#000000'>
     <foo1 baz="y1=name\" bar1=x1 > end" w=q>
@@ -263,10 +262,10 @@ TEXT1 &amp; more
   </html>
   ` , 'HTML') ;
   
-  my $data = $XML->data(noheader => 1 , nospace => 1 ) ;
+  $data = $XML->data(noheader => 1 , nospace => 1 ) ;
   ok($data,q`<html><title>TITLE</title><body bgcolor="#000000"><foo1 baz='y1=name\" bar1=x1 &gt; end' w="q"/><foo2 bar2="" arg0="" x="y">FOO2-DATA</foo2><foo3 bar3="x3"/><foo4 url="http://www.com/dir/file.x?query=value&amp;x=y"/></body></html>`) ;
 
-  my $XML = XML::Smart->new(q`
+  $XML = XML::Smart->new(q`
   <html><title>TITLE</title>
   <body bgcolor='#000000'>
     <foo1 bar1=x1>
@@ -279,7 +278,7 @@ TEXT1 &amp; more
   </body></html>
   ` , 'HTML') ;
   
-  my $data = $XML->data(noheader => 1 , nospace => 1) ;
+  $data = $XML->data(noheader => 1 , nospace => 1) ;
   $data =~ s/\s//gs ;
   
   ok($data,q`<html><title>TITLE</title><bodybgcolor="#000000"><foo1bar1="x1"/><SCRIPTLANGUAGE="JavaScript"><!--functionstopError(){returntrue;}window.onerror=stopError;document.writeln("some>>written!");--></SCRIPT><foo2bar2="x2"/></body></html>`);
@@ -349,13 +348,13 @@ TEXT1 &amp; more
   
   my @addrs = @{$XML->{server}{address}} ;
   
-  ok(@addrs[0],$addr0);
-  ok(@addrs[1],$addr1);
+  ok($addrs[0],$addr0);
+  ok($addrs[1],$addr1);
   
-  my @addrs = @{$XML->{server}[0]{address}} ;
+  @addrs = @{$XML->{server}[0]{address}} ;
   
-  ok(@addrs[0],$addr0);
-  ok(@addrs[1],$addr1);
+  ok($addrs[0],$addr0);
+  ok($addrs[1],$addr1);
 }
 #########################
 {
@@ -363,22 +362,22 @@ TEXT1 &amp; more
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
   $XML = $XML->{hosts} ;
   
-  my $addr = $XML->{server}('type','eq','suse'){address} ;
+  my $addr = $XML->{'server'}('type','eq','suse'){'address'} ;
   ok($addr,'192.168.1.10') ;
   
-  my $addr0 = $XML->{server}('type','eq','suse'){address}[0] ;
+  my $addr0 = $XML->{'server'}('type','eq','suse'){'address'}[0] ;
   ok($addr,$addr0) ;
   
-  my $addr1 = $XML->{server}('type','eq','suse'){address}[1] ;
+  my $addr1 = $XML->{'server'}('type','eq','suse'){'address'}[1] ;
   ok($addr1,'192.168.1.20') ;
   
-  my $type = $XML->{server}('version','>=','9'){type} ;
+  my $type = $XML->{'server'}('version','>=','9'){'type'} ;
   ok($type,'conectiva') ;
   
-  my $addr = $XML->{server}('version','>=','9'){address} ;
+  $addr = $XML->{'server'}('version','>=','9'){'address'} ;
   ok($addr,'192.168.2.100') ;
   
-  my $addr0 = $XML->{server}('version','>=','9'){address}[0] ;
+  $addr0 = $XML->{'server'}('version','>=','9'){'address'}[0] ;
   ok($addr0,$addr) ;
     
 }
@@ -397,20 +396,20 @@ TEXT1 &amp; more
 
   push(@{$XML->{server}} , $newsrv) ;
   
-  my $addr0 = $XML->{server}('type','eq','mandrake'){address}[0] ;
+  my $addr0 = $XML->{'server'}('type','eq','mandrake'){'address'}[0] ;
   ok($addr0,'192.168.3.201') ;
   
-  $XML->{server}('type','eq','mandrake'){address}[1] = '192.168.3.202' ;
+  $XML->{'server'}('type','eq','mandrake'){'address'}[1] = '192.168.3.202' ;
 
-  my $addr1 = $XML->{server}('type','eq','mandrake'){address}[1] ;
+  my $addr1 = $XML->{'server'}('type','eq','mandrake'){'address'}[1] ;
   ok($addr1,'192.168.3.202') ;
   
-  push(@{$XML->{server}('type','eq','conectiva'){address}} , '192.168.2.101') ;
+  push(@{$XML->{'server'}('type','eq','conectiva'){'address'}} , '192.168.2.101') ;
 
-  my $addr1 = $XML->{server}('type','eq','conectiva'){address}[1] ;
+  $addr1 = $XML->{'server'}('type','eq','conectiva'){'address'}[1] ;
   ok($addr1,'192.168.2.101') ;
   
-  my $addr1 = $XML->{server}[2]{address}[1] ;
+  $addr1 = $XML->{'server'}[2]{'address'}[1] ;
   ok($addr1,'192.168.2.101') ;
   
 }
@@ -427,8 +426,8 @@ TEXT1 &amp; more
   
   my @users = $XML->{users}('email','=~','^jo') ;
   
-  ok( @users[0]->{name} , 'Joe X') ;
-  ok( @users[1]->{name} , 'JoH Y') ;
+  ok( $users[0]->{name} , 'Joe X') ;
+  ok( $users[1]->{name} , 'JoH Y') ;
   
 }
 #########################
@@ -468,7 +467,7 @@ TEXT1 &amp; more
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
   
-  $XML->{hosts}{server}('type','eq','conectiva'){address}[1] = '' ;
+  $XML->{'hosts'}{'server'}('type','eq','conectiva'){'address'}[1] = '' ;
   
   my $data = $XML->data(
   noident => 1 ,
@@ -490,8 +489,8 @@ TEXT1 &amp; more
 
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
   
-  $XML->{data} = aaa ;
-  $XML->{var} = 10 ;
+  $XML->{data} = 'aaa' ;
+  $XML->{var } = 10    ;
   
   $XML->{addr} = [qw(1 2 3)] ;
   
@@ -526,7 +525,7 @@ TEXT1 &amp; more
   ver => 123 ,
   } ;
   
-  my $data = $XML->data(noheader => 1) ;
+  $data = $XML->data(noheader => 1) ;
   $data =~ s/\s//gs ;
   
   $dataok = q`<root><hosts><serveros="lx"type="red"ver="123"/></hosts><hosts><serveros="LX"type="red"ver="123"/></hosts></root>`;
@@ -584,8 +583,8 @@ TEXT1 &amp; more
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
   
   $XML->{hosts}{server} = [
-  { os => lx , type => a , ver => 1 ,} ,
-  { os => lx , type => b , ver => 2 ,} ,
+  { os => 'lx' , type => 'a' , ver => '1' ,} ,
+  { os => 'lx ', type => 'b' , ver => '2' ,} ,
   ];
   
   ok( $XML->{hosts}{server}{type} , 'a') ;
@@ -613,7 +612,7 @@ TEXT1 &amp; more
   my @types = $XML->{hosts}{server}('[@]','type') ;
   ok("@types" , 'redhat suse conectiva freebsd') ;
 
-  my @types = $XML->{hosts}{server}{type}('<@') ;
+  @types = $XML->{hosts}{server}{type}('<@') ;
   ok("@types" , 'redhat suse conectiva freebsd') ;
   
 }
@@ -628,8 +627,8 @@ TEXT1 &amp; more
   foreach my $srvs_i ( @srvs ) { push(@types , $srvs_i->{type}) ;}
   ok("@types" , 'redhat suse conectiva') ;
 
-  my @srvs = $XML->{hosts}{server}(['os','eq','linux'],['os','eq','bsd']) ;
-  my @types ;
+  @srvs = $XML->{hosts}{server}(['os','eq','linux'],['os','eq','bsd']) ;
+  @types = () ;
   foreach my $srvs_i ( @srvs ) { push(@types , $srvs_i->{type}) ;}
   ok("@types" , 'redhat suse conectiva freebsd') ;
   
@@ -644,9 +643,9 @@ TEXT1 &amp; more
   my $XML = XML::Smart->new($data , 'XML::Smart::Parser') ;
 
   ok($XML->{code} , $wild) ;
-  my $data = $XML->data() ;
+  $data = $XML->data() ;
   
-  my $XML = XML::Smart->new($data , 'XML::Smart::Parser') ;
+  $XML = XML::Smart->new($data , 'XML::Smart::Parser') ;
 
   ok($XML->{code} , $wild) ;
   
@@ -680,7 +679,7 @@ TEXT1 &amp; more
   
   ok($XML->{root}{foo} , q` My Company & Name + x >> plus " + '...`) ;
   
-  my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
+  $data = $XML->data(nospace => 1 , noheader => 1 ) ;
   ok($data , q`<root><foo bar="x"> My Company &amp; Name + x &gt;&gt; plus " + '...</foo></root>`) ;
 
 }
@@ -700,7 +699,7 @@ TEXT1 &amp; more
   ok($nodes[0]->{arg},'z');
 
   
-  my @nodes = $XML->{root}{foo}->nodes_keys ;
+  @nodes = $XML->{root}{foo}->nodes_keys ;
   ok("@nodes",'bar');
 
   ok($XML->{root}{foo}{bar}->is_node) ;
@@ -793,20 +792,20 @@ TEXT1 &amp; more
   ok($data , q`<menu arg2="456" arg1="123"/>`) ;
 
   $XML->{menu}{arg2}->set_node ;
-  my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
+  $data = $XML->data(nospace => 1 , noheader => 1 ) ;
   ok($data , q`<menu arg1="123"><arg2>456</arg2></menu>`) ;
 
   $XML->{menu}{arg2}->set_node(0) ;
-  my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
+  $data = $XML->data(nospace => 1 , noheader => 1 ) ;
   ok($data , q`<menu arg2="456" arg1="123"/>`) ;
   
-  $XML->{menu}->set_order(arg1 , arg2) ;
-  my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
+  $XML->{menu}->set_order('arg1' , 'arg2') ;
+  $data = $XML->data(nospace => 1 , noheader => 1 ) ;
   ok($data , q`<menu arg1="123" arg2="456"/>`) ;
   
   delete $XML->{menu}{arg2}[0] ;
 
-  my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
+  $data = $XML->data(nospace => 1 , noheader => 1 ) ;
   ok($data , q`<menu arg1="123"/>`) ;
 
 }
@@ -821,15 +820,18 @@ TEXT1 &amp; more
 
   ok( $XML->tree->{root}{'/nodes'}{foo} , '1' ) ;
   ok( $XML->tree->{root}{foo}{CONTENT} , "bla bla bla" ) ;  
+  
+
+  ok( ref $XML->tree->{ root }{ foo }, 'HASH' ) ;
 
   $XML->{root}{foo}->set_node(0) ;
 
-  ok( !exists $XML->tree->{root}{foo}{CONTENT} ) ;
+  ok( ref $XML->tree->{ root }{ foo }, '' ) ;
   ok( !exists $XML->tree->{root}{'/nodes'}{foo} ) ;
   
   $XML->{root}{foo}->set_cdata(1) ;
   
-  ok( $XML->tree->{root}{'/nodes'}{foo} , 'cdata,1,' ) ;
+  ok( $XML->tree->{root}{'/nodes'}{foo} , 'cdata,1,' )   ;
   ok( $XML->tree->{root}{foo}{CONTENT} , "bla bla bla" ) ;  
   
   $XML->{root}{foo}->set_node(1) ;
@@ -861,10 +863,11 @@ TEXT1 &amp; more
   
   ok( $XML->tree->{root}{'/nodes'}{foo} , 'binary,0,1' ) ;
   ok( $XML->tree->{root}{foo}{CONTENT} , "bla bla bla" ) ;
-  
+
+  ok( ref( $XML->tree->{root}{foo} ), 'HASH' ) ; 
   $XML->{root}{foo}->set_auto ;
-  
-  ok( !exists $XML->tree->{root}{foo}{CONTENT} ) ;
+
+  ok( ref( $XML->tree->{root}{foo} ), '' ) ; 
   ok( !exists $XML->tree->{root}{'/nodes'}{foo} ) ;
 
 }
@@ -919,7 +922,7 @@ TEXT1 &amp; more
   
   $XML->{root}{foo}->set_cdata(1) ;
 
-  my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
+  $data = $XML->data(nospace => 1 , noheader => 1 ) ;
   ok($data , '<root><foo><![CDATA[simple]]></foo></root>') ;
   
 }
@@ -934,7 +937,7 @@ TEXT1 &amp; more
   
   $XML->{root}{foo}->set_cdata(0) ;
 
-  my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
+  $data = $XML->data(nospace => 1 , noheader => 1 ) ;
   ok($data , '<root><foo>&lt;words&gt;foo bar baz&lt;/words&gt;</foo></root>') ;  
 
 }
@@ -957,31 +960,31 @@ TEXT1 &amp; more
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
   $XML = $XML->{hosts} ;
   
-  my $addr = $XML->{server}('type','eq','suse'){address} ;
+  my $addr = $XML->{'server'}('type','eq','suse'){'address'} ;
   
   ok($addr->path , '/hosts/server[1]/address') ;
   
-  my $addr0 = $XML->{server}('type','eq','suse'){address}[0] ;
+  my $addr0 = $XML->{'server'}('type','eq','suse'){'address'}[0] ;
   
   ok($addr0->path , '/hosts/server[1]/address[0]') ;
   ok($addr0->path_as_xpath , '/hosts/server[2]/address') ;
   
-  my $addr1 = $XML->{server}('type','eq','suse'){address}[1] ;
+  my $addr1 = $XML->{'server'}('type','eq','suse'){'address'}[1] ;
   
-  my $type = $XML->{server}('version','>=','9'){type} ;
+  my $type = $XML->{'server'}('version','>=','9'){'type'} ;
 
   ok($type->path , '/hosts/server[2]/type') ;
   
-  my $addr = $XML->{server}('version','>=','9'){address} ;
+  $addr = $XML->{'server'}('version','>=','9'){'address'} ;
 
   ok($addr->path , '/hosts/server[2]/address') ;
   
-  my $addr0 = $XML->{server}('version','>=','9'){address}[0] ;
+  $addr0 = $XML->{'server'}('version','>=','9'){'address'}[0] ;
 
   ok($addr0->path , '/hosts/server[2]/address[0]') ;
   ok($addr0->path_as_xpath , '/hosts/server[3]/@address') ;
   
-  my $type = $XML->{server}('version','>=','9'){type} ;
+  $type = $XML->{'server'}('version','>=','9'){'type'} ;
   
   ok($type->path , '/hosts/server[2]/type') ;
   ok($type->path_as_xpath , '/hosts/server[3]/@type') ;
@@ -1006,10 +1009,10 @@ TEXT1 &amp; more
   
   $XML = $XML->cut_root ;
   
-  my @frames_123 = @{ $XML->{output}('name','eq',123){frames} } ;
-  my @formats_123 = map { $_->{format} } @frames_123 ;
+  my @frames_123 = @{ $XML->{'output'}('name','eq',123){'frames'} } ;
+  my @formats_123 = map { $_->{'format'} } @frames_123 ;
   
-  my @frames_456 = @{ $XML->{output}('name','eq',456){frames} } ;
+  my @frames_456 = @{ $XML->{'output'}('name','eq',456){'frames'} } ;
   my @formats_456 = map { $_->{format} } @frames_456 ;
 
   ok( join(";", @formats_123) , 'a;b' ) ;
@@ -1035,7 +1038,7 @@ TEXT1 &amp; more
 
   $p->parse($html) ;
 
-  ok(@tag[-1] , '$s->{supply}->shift') ;  
+  ok($tag[-1] , '$s->{supply}->shift') ;  
 
 }
 #########################
@@ -1074,9 +1077,9 @@ TEXT1 &amp; more
     my $xp2 = $XML->XPath ;
     ok($xp1,$xp2) ;
     
-    my $xp1 = $XML->XPath ;
+    $xp1 = $XML->XPath ;
     $XML->{hosts}{tmp} = 123 ;
-    my $xp2 = $XML->XPath ;
+    $xp2 = $XML->XPath ;
     
    ## Test cache of the XPath object:
     ok(1) if $xp1 != $xp2 ;
@@ -1145,7 +1148,7 @@ TEXT1 &amp; more
   my @attrs = $dtd->get_attrs('curso') ;
   ok( join(" ",@attrs) , 'centro nome age') ;
   
-  my @attrs = $dtd->get_attrs_req('curso') ;
+  @attrs = $dtd->get_attrs_req('curso') ;
   ok( join(" ",@attrs) , 'centro nome') ;
   
 }
@@ -1246,35 +1249,43 @@ TEXT1 &amp; more
 #########################
 {
 
-  eval(q`use LWP::UserAgent`) ;
-  if ( !$@ ) {
+
+    eval(q`use LWP::UserAgent`) ;
+    if ( !$@ ) {
+
+	if( $ENV{ URL_TESTS } ) { 
   
-    my $url = 'http://www.perlmonks.org/index.pl?node_id=16046' ;
-
-    my $opt = prompt("\nURL: $url\nDo you want to test XML::Smart with an URL?","n");
-    
-    if ( $opt =~ /^\s*(?:y|s)/si ) {
-      print "\nGetting URL... " ;
-      
-      my $XML = XML::Smart->new($url , 'XML::Smart::Parser') ;
-      
-      print "Test: " ;
-      if ( $XML->{XPINFO}{INFO}{sitename} eq 'Perl Monks' ) { print "OK\n" ;}
-      else {
-        print "ERROR!\n" ;
-        print "-----------------------------------------------\n" ;
-        print "The XML of the URL:\n\n" ;
-        print $XML->data ;
-        print "-----------------------------------------------\n" ;
-      }
+	    my $url = 'http://www.perlmonks.org/index.pl?node_id=16046' ;
+	    
+	    print STDERR "\nGetting URL... " ;
+		
+	    my $XML = XML::Smart->new($url , 'XML::Smart::Parser') ;
+		
+	    print STDERR "Test: " ;
+	    
+	    if ( $XML->{XPINFO}{INFO}{sitename} eq 'PerlMonks' ) { 
+		print STDERR "OK\n" ;
+	    } else {
+		print STDERR "ERROR!\n" ;
+		print STDERR "-----------------------------------------------\n" ;
+		print STDERR "The XML of the URL:\n\n" ;
+		print STDERR $XML->data ;
+		print STDERR "-----------------------------------------------\n" ;
+	    }
+	} else { 
+		print STDERR "Skipping URL test, Enable by setting ENV variable URL_TESTS \n" ;
+	}
+    } else { 
+	print "LWP::UserAgent not found - Skipping URL test!\n" ;
     }
-    else { print "Skipping URL test!\n" ;}
-  }
 
-}
+    
+} 
+
 #########################
 
 print "\nThe End! By!\n" ;
+
 
 1 ;
 

@@ -30,19 +30,28 @@ use XML::Smart::Tree         ;
 our ($VERSION) ;
 $VERSION = '1.71' ;
 
+
+my $DOWARN = 1 ;
+BEGIN { $SIG{'__WARN__'} = sub { warn $_[0] if $DOWARN } }
+
+
 ###############
 # AUTOLOADERS #
 ###############
 
 sub data {
     require XML::Smart::Data ;
+    $DOWARN = 0 ;
     *data = \&XML::Smart::Data::data ;
+    $DOWARN = 1 ;
     &XML::Smart::Data::data(@_) ;
 }
 
 sub apply_dtd {
     require XML::Smart::DTD ;
+    $DOWARN = 0 ;
     *apply_dtd = \&XML::Smart::DTD::apply_dtd ;
+    $DOWARN = 1 ;
     &XML::Smart::DTD::apply_dtd(@_) ;
 }
 
@@ -53,11 +62,14 @@ sub XPath_pointer { _load_xpath() ; &XML::Smart::XPath::XPath_pointer(@_) ;}
 
 sub _load_xpath {
     require XML::Smart::XPath ;
+    $DOWARN = 0 ;
     *xpath = \&XML::Smart::XPath::xpath ;
     *XPath = \&XML::Smart::XPath::XPath ;
     *xpath_pointer = \&XML::Smart::XPath::xpath_pointer ;
     *XPath_pointer = \&XML::Smart::XPath::XPath_pointer ;
     *_load_xpath = sub {} ;
+    $DOWARN = 1 ;
+
 }
 
 #################

@@ -2,7 +2,7 @@
 ## Name:        Tree.pm
 ## Purpose:     XML::Smart::Tree
 ## Author:      Graciliano M. P.
-## Modified by:
+## Modified by: Harish Madabushi
 ## Created:     10/05/2003
 ## RCS-ID:      
 ## Copyright:   (c) 2003 Graciliano M. P.
@@ -15,33 +15,33 @@ package XML::Smart::Tree ;
 use XML::Smart::Entity qw(_parse_basic_entity) ;
 
 use strict qw(vars) ;
-no warnings ;
+no  warnings ;
 
 our ($VERSION) ;
-$VERSION = '1.0' ;
+$VERSION = '1.1' ;
 
-  my %PARSERS = (
-  XML_Parser => 0 ,
-  XML_Smart_Parser => 0 ,
-  XML_Smart_HTMLParser => 0 ,
-  ) ;
-  
-  my $DEFAULT_LOADED ;
-  
-  use vars qw($NO_XML_PARSER);
-  
-  my ( $SIG_WARN , $SIG_DIE )  ;
+my %PARSERS = (
+    XML_Parser => 0 ,
+    XML_Smart_Parser => 0 ,
+    XML_Smart_HTMLParser => 0 ,
+    ) ;
+
+my $DEFAULT_LOADED ;
+
+use vars qw($NO_XML_PARSER);
+
+my ( $SIG_WARN , $SIG_DIE )  ;
 
 sub _unset_sig_warn {
-  $SIG_WARN = $SIG{__WARN__} ;
-  $SIG_DIE = $SIG{__DIE__} ;
-  $SIG{__WARN__} = sub {} ;
-  $SIG{__DIE__} = sub {} ;
+    $SIG_WARN = $SIG{__WARN__} ;
+    $SIG_DIE  = $SIG{__DIE__}  ;
+    $SIG{__WARN__} = sub {} ;
+    $SIG{__DIE__}  = sub {} ;
 }
 
 sub _reset_sig_warn {
-  $SIG{__WARN__} = $SIG_WARN ;
-  $SIG{__DIE__} = $SIG_DIE ;
+    $SIG{__WARN__} = $SIG_WARN ;
+    $SIG{__DIE__}  = $SIG_DIE  ;
 }
 
 ###################
@@ -49,29 +49,29 @@ sub _reset_sig_warn {
 ###################
 
 sub load_XML_Parser {
-  return if $NO_XML_PARSER ;
-  
-  eval {
+
+    return if $NO_XML_PARSER ;
+    
     _unset_sig_warn() ;
-      eval('use XML::Parser ;') ;
-    _reset_sig_warn() ;
+    eval('use XML::Parser ;') ;
+    _reset_sig_warn() ; 
     if ($@) { $@ = undef ; return( undef ) ;}
-  } ;
-  
-  my ($xml , $tree) ;
-  
-  eval {
+    
+    my ($xml , $tree) ;
+    
     _unset_sig_warn() ;
-      no strict ;
-      my $data = '<root><foo arg1="t1" arg2="t2" /></root>' ;
-      $xml = XML::Parser->new(Style => 'Tree') ;
-      $tree = $xml->parse($data) ;
+    eval {
+	no strict ;
+	my $data = '<root><foo arg1="t1" arg2="t2" /></root>' ;
+	$xml = XML::Parser->new(Style => 'Tree') ;
+	$tree = $xml->parse($data) ;
+    } ;
     _reset_sig_warn() ;
-  } ;
   
-  if (!$tree || ref($tree) ne 'ARRAY') { return( undef ) ;}
-  if ($tree->[1][2][0]{arg1} eq 't1') { return( 1 ) ;}
-  return( undef ) ;
+    if (!$tree || ref($tree) ne 'ARRAY') { return( undef ) ;}
+    if ($tree->[1][2][0]{arg1} eq 't1') { return( 1 ) ;}
+    return( undef ) ;
+
 }
 
 #########################
@@ -79,11 +79,13 @@ sub load_XML_Parser {
 #########################
 
 sub load_XML_Smart_Parser {
+
   _unset_sig_warn() ;
-    eval('use XML::Smart::Parser ;') ;
+  eval('use XML::Smart::Parser ;') ;
   _reset_sig_warn() ;
   if ($@) { $@ = undef ; return( undef ) ;}
   return(1) ;
+
 }
 
 #############################

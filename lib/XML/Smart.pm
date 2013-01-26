@@ -2,7 +2,7 @@
 ## Name:        Smart.pm
 ## Purpose:     XML::Smart
 ## Author:      Graciliano M. P.
-## Modified by:
+## Modified by: Harish Madabushi
 ## Created:     10/05/2003
 ## RCS-ID:      
 ## Copyright:   (c) 2003 Graciliano M. P.
@@ -10,35 +10,40 @@
 ##              modify it under the same terms as Perl itself
 #############################################################################
 
-package XML::Smart ;
-use 5.006 ;
 
-no warnings ;
+package XML::Smart           ;
 
-use Object::MultiType ;
-use vars qw(@ISA) ;
+use 5.006                    ;
+
+use strict                   ;
+use warnings                 ;
+
+use Object::MultiType        ;
+
+use vars qw(@ISA)            ;
 @ISA = qw(Object::MultiType) ;
 
-use XML::Smart::Tie ;
-use XML::Smart::Tree ;
+use XML::Smart::Tie          ;
+use XML::Smart::Tree         ;
+
 
 our ($VERSION) ;
-$VERSION = '1.6.9' ;
+$VERSION = '1.71' ;
 
 ###############
 # AUTOLOADERS #
 ###############
 
 sub data {
-  require XML::Smart::Data ;
-  *data = \&XML::Smart::Data::data ;
-  &XML::Smart::Data::data(@_) ;
+    require XML::Smart::Data ;
+    *data = \&XML::Smart::Data::data ;
+    &XML::Smart::Data::data(@_) ;
 }
 
 sub apply_dtd {
-  require XML::Smart::DTD ;
-  *apply_dtd = \&XML::Smart::DTD::apply_dtd ;
-  &XML::Smart::DTD::apply_dtd(@_) ;
+    require XML::Smart::DTD ;
+    *apply_dtd = \&XML::Smart::DTD::apply_dtd ;
+    &XML::Smart::DTD::apply_dtd(@_) ;
 }
 
 sub xpath { _load_xpath() ; &XML::Smart::XPath::xpath(@_) ;}
@@ -47,12 +52,12 @@ sub xpath_pointer { _load_xpath() ; &XML::Smart::XPath::xpath_pointer(@_) ;}
 sub XPath_pointer { _load_xpath() ; &XML::Smart::XPath::XPath_pointer(@_) ;}
 
 sub _load_xpath {
-  require XML::Smart::XPath ;
-  *xpath = \&XML::Smart::XPath::xpath ;
-  *XPath = \&XML::Smart::XPath::XPath ;
-  *xpath_pointer = \&XML::Smart::XPath::xpath_pointer ;
-  *XPath_pointer = \&XML::Smart::XPath::XPath_pointer ;
-  *_load_xpath = sub {} ;
+    require XML::Smart::XPath ;
+    *xpath = \&XML::Smart::XPath::xpath ;
+    *XPath = \&XML::Smart::XPath::XPath ;
+    *xpath_pointer = \&XML::Smart::XPath::xpath_pointer ;
+    *XPath_pointer = \&XML::Smart::XPath::XPath_pointer ;
+    *_load_xpath = sub {} ;
 }
 
 #################
@@ -60,7 +65,7 @@ sub _load_xpath {
 #################
 
 sub NO_XML_PARSER {
-  $XML::Smart::Tree::NO_XML_PARSER = !@_ ? 1 : ( $_[0] ? 1 : undef ) ;
+    $XML::Smart::Tree::NO_XML_PARSER = !@_ ? 1 : ( $_[0] ? 1 : undef ) ;
 }
 
 #######
@@ -68,27 +73,27 @@ sub NO_XML_PARSER {
 #######
 
 sub new {
-  my $class = shift ;
-  my $file = shift ;
-  my $parser = ($_[0] !~ /^(?:uper|low|arg|on|no|use)\w+$/i) ? shift(@_) : '' ;
-  
-  my $this = Object::MultiType->new(
-  boolsub   => \&boolean ,
-  scalarsub => \&content ,
-  tiearray  => 'XML::Smart::Tie::Array' ,
-  tiehash   => 'XML::Smart::Tie::Hash' ,
-  tieonuse  => 1 ,
-  code      => \&find_arg , 
-  ) ;
-  
-  my $parser = &XML::Smart::Tree::load($parser) ;
-  
-  if ($file eq '') { $$this->{tree} = {} ;}
-  else { $$this->{tree} = &XML::Smart::Tree::parse($file,$parser,@_) ;}
-
-  $$this->{point} = $$this->{tree} ;
-  
-  bless($this,$class) ;
+    my $class = shift ;
+    my $file  = shift ;
+    my $parser = ($_[0] and $_[0] !~ /^(?:uper|low|arg|on|no|use)\w+$/i) ? shift(@_) : '' ;
+    
+    my $this = Object::MultiType->new(
+	boolsub   => \&boolean ,
+	scalarsub => \&content ,
+	tiearray  => 'XML::Smart::Tie::Array' ,
+	tiehash   => 'XML::Smart::Tie::Hash' ,
+	tieonuse  => 1 ,
+	code      => \&find_arg , 
+	) ;
+    
+    $parser = &XML::Smart::Tree::load($parser) ;
+    
+    if ( !($file) or $file eq '') { $$this->{tree} = {} ;}
+    else { $$this->{tree} = &XML::Smart::Tree::parse($file,$parser,@_) ;}
+    
+    $$this->{point} = $$this->{tree} ;
+    
+    bless($this,$class) ;
 }
 
 #########
@@ -96,83 +101,84 @@ sub new {
 #########
 
 sub clone {
-  my $saver = shift ;
-
-  my ($pointer , $back , $array , $key , $i , $null_clone) ;
-
-  if ($#_ == 0 && !ref $_[0]) {
-    my $nullkey = shift ;
-    $pointer = {} ;
-    $back = {} ;
-    $null_clone = 1 ;
+    my $saver = shift ;
     
-    ($i) = ( $nullkey =~ /(?:^|\/)\/\[(\d+)\]$/s );
-    ($key) = ( $nullkey =~ /(.*?)(?:\/\/\[\d+\])?$/s );
-    if ($key =~ /^\/\[\d+\]$/) { $key = undef ;}
-  }
-
-  else {
-    $pointer = shift ;
-    $back = shift ;
-    $array = shift ;
-    $key = shift ;
-    $i = shift ;
-  }
-
+    my ($pointer , $back , $array , $key , $i , $null_clone) ;
+    
+    if ($#_ == 0 && !ref $_[0]) {
+	my $nullkey = shift ;
+	$pointer = {} ;
+	$back = {} ;
+	$null_clone = 1 ;
+	
+	($i) = ( $nullkey =~ /(?:^|\/)\/\[(\d+)\]$/s );
+	($key) = ( $nullkey =~ /(.*?)(?:\/\/\[\d+\])?$/s );
+	if ($key =~ /^\/\[\d+\]$/) { $key = undef ;}
+    }
+    
+    else {
+	$pointer = shift ;
+	$back = shift ;
+	$array = shift ;
+	$key = shift ;
+	$i = shift ;
+    }
+    
   my $clone = Object::MultiType->new(
-  boolsub   => \&boolean ,
+      boolsub   => \&boolean ,
   scalarsub => \&content ,
-  tiearray  => 'XML::Smart::Tie::Array' ,
-  tiehash   => 'XML::Smart::Tie::Hash' ,
-  tieonuse  => 1 ,
-  code      => \&find_arg ,
-  ) ;
-  bless($clone,__PACKAGE__) ;  
+      tiearray  => 'XML::Smart::Tie::Array' ,
+      tiehash   => 'XML::Smart::Tie::Hash' ,
+      tieonuse  => 1 ,
+      code      => \&find_arg ,
+      ) ;
+    bless($clone,__PACKAGE__) ;  
   
-  if ( !$saver->is_saver ) { $saver = $$saver ;}
-  
-  if (!$back) {
-    if (!$pointer) { $back = $saver->{back} ;}
-    else { $back = $saver->{point} ;}
-  }
-  
-  if (!$array && !$pointer) { $array = $saver->{array} ;}
-
-  my @keyprev ;
-
-  if (defined $key) { @keyprev = $key ;}
-  elsif (defined $i) { @keyprev = "[$i]" ;}
-
-  if (!defined $key) { $key = $saver->{key} ;}
-  if (!defined $i) { $i = $saver->{i} ;}
-  
+    if ( !$saver->is_saver ) { $saver = $$saver ;}
+    
+    if (!$back) {
+	if (!$pointer) { $back = $saver->{back} ;}
+	else { $back = $saver->{point} ;}
+    }
+    
+    if (!$array && !$pointer) { $array = $saver->{array} ;}
+    
+    my @keyprev ;
+    
+    if (defined $key) { @keyprev = $key ;}
+    elsif (defined $i) { @keyprev = "[$i]" ;}
+    
+    if (!defined $key) { $key = $saver->{key} ;}
+    if (!defined $i) { $i = $saver->{i} ;}
+    
   if (!$pointer) { $pointer = $saver->{point} ;}
-  
-  #my @call = caller ;
-  #print "CLONE>> $key , $i >> @{$saver->{keyprev}} >> @_\n" ;
-
-  $$clone->{tree} = $saver->{tree} ;
-  $$clone->{point} = $pointer ;
-  $$clone->{back} = $back ;
-  $$clone->{array} = $array ;
-  $$clone->{key} = $key ;
-  $$clone->{i} = $i ;
-  
-  if ( @keyprev ) {
-    $$clone->{keyprev} = [@{$saver->{keyprev}}] ;
-    push(@{$$clone->{keyprev}} , @keyprev) ;
-  }
-  
-  if (defined $_[0]) { $$clone->{content} = \$_[0] ;}
-
-  if ( $null_clone || $saver->{null} ) {
-    $$clone->{null} = 1 ;
-    ## $$clone->{self} = $clone ;
-  }
-  
-  $$clone->{XPATH} = $saver->{XPATH} if $saver->{XPATH} ;
-  
+    
+    #my @call = caller ;
+    #print "CLONE>> $key , $i >> @{$saver->{keyprev}} >> @_\n" ;
+    
+    $$clone->{tree} = $saver->{tree} ;
+    $$clone->{point} = $pointer ;
+    $$clone->{back} = $back ;
+    $$clone->{array} = $array ;
+    $$clone->{key} = $key ;
+    $$clone->{i} = $i ;
+    
+    if ( @keyprev ) {
+	$$clone->{keyprev} = ( $saver->{keyprev} ) ? [@{$saver->{keyprev}}]  : [] ;
+	push(@{$$clone->{keyprev}} , @keyprev) ;
+    }
+    
+    if (defined $_[0]) { $$clone->{content} = \$_[0] ;}
+    
+    if ( $null_clone || $saver->{null} ) {
+	$$clone->{null} = 1 ;
+	## $$clone->{self} = $clone ;
+    }
+    
+    $$clone->{XPATH} = $saver->{XPATH} if $saver->{XPATH} ;
+    
   return( $clone ) ;
+
 }
 
 ###########
@@ -518,7 +524,7 @@ sub cut_root {
 
   if ($#nodes > 0) { return $this ;}
   
-  my $root = @nodes[0] ;
+  my $root = $nodes[0] ;
   return( $this->{$root} ) ;
 }
 
@@ -653,20 +659,23 @@ sub set_node {
   my $nodes = $back->{'/nodes'}->pointer ;
   
   if ( $bool ) {
-    if ( $$nodes{$key} =~ /^(\w+,\d+),(\d*)/ ) { $$nodes{$key} = "$1,1" ;}
-    else { $$nodes{$key} = 1 ;}
 
-    if ( !$this->{CONTENT} ) {
-      my $content = $this->content ;
-      $this->{CONTENT} = $content if $content ne '' ;
-    }
-  }
-  else {
-    delete $$nodes{$key} ;
-    my @keys = keys %$this ;
-    if ( $#keys == 0 && @keys[0] eq 'CONTENT') {
-      my $content = !$this->{CONTENT}->null ? $this->{CONTENT}('.') : $this->content ;
-      $this->back->pointer->{$key} = $content ;
+      if ( $$nodes{$key} && $$nodes{$key} =~ /^(\w+,\d+),(\d*)/ ) { 
+	  $$nodes{$key} = "$1,1" ;
+      }else { 
+	  $$nodes{$key} = 1 ;
+      }
+      
+      if ( !$this->{CONTENT} ) {
+	  my $content = $this->content ;
+	  $this->{CONTENT} = $content if $content ne '' ;
+      }
+  } else {
+      delete $$nodes{$key} ;
+      my @keys = keys %$this ;
+      if ( $#keys == 0 && $keys[0] eq 'CONTENT') {
+	  my $content = !$this->{CONTENT}->null ? $this->{CONTENT}('.') : $this->content ;
+	  $this->back->pointer->{$key} = $content ;
     }
   }
   
@@ -700,45 +709,48 @@ sub order {
 #############
 
 sub set_node_type {
-  my $this = shift ;
-  my ( $type , $bool ) = @_ ;
-  if ( $#_ < 1 ) { $bool = 1 ;}
-  
-  my $key = $this->key ;
-  
-  my $back = $this->back ;
-  
-  $back->{'/nodes'} = {} if $back->{'/nodes'}->null ;
-  my $nodes = $back->{'/nodes'}->pointer ;
-  
-  if ( $bool ) {
-    if ( $$nodes{$key} =~ /^\w+,\d+,(\d*)/ ) {
-      my $val = $1 ;
-      $$nodes{$key} = "$type,1,$val" ;
-    }
-    else { $$nodes{$key} = "$type,1,$$nodes{$key}" ;}
 
-    if ( !$this->{CONTENT} ) {
-      my $content = $this->content ;
-      $this->{CONTENT} = $content if $content ne '' ;
+    my $this = shift ;
+    my ( $type , $bool ) = @_ ;
+    if ( $#_ < 1 ) { $bool = 1 ;}
+    
+    my $key = $this->key ;
+    
+    my $back = $this->back ;
+    
+    $back->{'/nodes'} = {} if $back->{'/nodes'}->null ;
+    my $nodes = $back->{'/nodes'}->pointer ;
+    
+    if ( $bool ) {
+	if ( $$nodes{$key} && $$nodes{$key} =~ /^\w+,\d+,(\d*)/ ) {
+	    my $val = $1                   ;
+	    $$nodes{$key} = "$type,1,$val" ;
+	} else { 
+	    my $existing_node_data = ( $$nodes{$key} ) ? $$nodes{$key} : "" ;
+	    $$nodes{$key} = "$type,1," . $existing_node_data ;
+	}
+	
+	if ( !$this->{CONTENT} ) {
+	    my $content = $this->content ;
+	    $this->{CONTENT} = $content if $content ne '' ;
+	}
     }
-  }
-  else {
-    if ( !$$nodes{$key} ) {
-      my $tp = _data_type( $back->{$key} ) ;
-      if ( $tp > 2 ) { $$nodes{$key} = "$type,0," ;}
+    else {
+	if ( !$$nodes{$key} ) {
+	    my $tp = _data_type( $back->{$key} ) ;
+	    if ( $tp > 2 ) { $$nodes{$key} = "$type,0," ;}
+	}
+	elsif ( $$nodes{$key} eq '1' ) { $$nodes{$key} = "$type,0,1" ;}
+	elsif ( $$nodes{$key} =~ /^\w+,\d+,1/ ) { $$nodes{$key} = "$type,0,1" ;}
+	elsif ( $$nodes{$key} =~ /^\w+,\d+,0?$/ ) {
+	    delete $$nodes{$key} ;
+	    my @keys = keys %$this ;
+	    if ( $#keys == 0 && $keys[0] eq 'CONTENT') {
+		my $content = $this->{CONTENT}('.') ;
+		$this->back->pointer->{$key} = $content ;
+	    }
+	}
     }
-    elsif ( $$nodes{$key} eq '1' ) { $$nodes{$key} = "$type,0,1" ;}
-    elsif ( $$nodes{$key} =~ /^\w+,\d+,1/ ) { $$nodes{$key} = "$type,0,1" ;}
-    elsif ( $$nodes{$key} =~ /^\w+,\d+,0?$/ ) {
-      delete $$nodes{$key} ;
-      my @keys = keys %$this ;
-      if ( $#keys == 0 && @keys[0] eq 'CONTENT') {
-        my $content = $this->{CONTENT}('.') ;
-        $this->back->pointer->{$key} = $content ;
-      }
-    }
-  }
 }
 
 #############
@@ -777,7 +789,7 @@ sub set_auto_node {
   elsif ( $$nodes{$key} =~ /^\w+,\d+,0?$/ ) {
     delete $$nodes{$key} ;
     my @keys = keys %$this ;
-    if ( $#keys == 0 && @keys[0] eq 'CONTENT') {
+    if ( $#keys == 0 && $keys[0] eq 'CONTENT') {
       my $content = $this->{CONTENT}('.') ;
       $this->back->pointer->{$key} = $content ;
     }
@@ -799,7 +811,7 @@ sub set_auto {
   
   delete $$nodes{$key} ;
   my @keys = keys %$this ;
-  if ( $#keys == 0 && @keys[0] eq 'CONTENT') {
+  if ( $#keys == 0 && $keys[0] eq 'CONTENT') {
     my $content = $this->{CONTENT}('.') ;
     $this->back->pointer->{$key} = $content ;
   }
@@ -815,10 +827,10 @@ sub set_auto {
 ## 1 value
 
 sub _data_type {
-  return 4 if ($_[0] =~ /[^\w\d\s!"#\$\%&'\(\)\*\+,\-\.\/:;<=>\?\@\[\\\]\^\`\{\|}~€‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ]/s) ;
-  return 3 if ($_[0] =~ /<.*?>/s) ;
-  return 2 if ($_[0] =~ /[\r\n\t]/s) ;
-  return 1 ;
+    return 4 if( $_[0] && $_[0] =~ /[^\w\d\s!"#\$\%&'\(\)\*\+,\-\.\/:;<=>\?\@\[\\\]\^\`\{\|}~€‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ]/s) ;
+    return 3 if( $_[0] && $_[0] =~ /<.*?>/s    ) ;
+    return 2 if( $_[0] && $_[0] =~ /[\r\n\t]/s ) ;
+    return 1 ;
 }
 
 #######
@@ -948,18 +960,18 @@ sub find_arg {
       $data = ref($hash) eq 'HASH' ? $$hash{$name} : $hash ;
       $data = $$data{CONTENT} if ref($data) eq 'HASH' ;
       
-      if    ($type eq 'eq'  && $data eq $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq 'ne'  && $data ne $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '=='  && $data == $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '!='  && $data != $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '<='  && $data <= $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '>='  && $data >= $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '<'   && $data <  $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '>'   && $data >  $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '=~'  && $data =~ /$value/s)  { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '=~i' && $data =~ /$value/is) { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '!~'  && $data !~ /$value/s)  { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '!~i' && $data !~ /$value/is) { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      if    ($type eq 'eq'  && $data && $data eq $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq 'ne'  && $data && $data ne $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '=='  && $data && $data == $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '!='  && $data && $data != $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '<='  && $data && $data <= $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '>='  && $data && $data >= $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '<'   && $data && $data <  $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '>'   && $data && $data >  $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '=~'  && $data && $data =~ /$value/s)  { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '=~i' && $data && $data =~ /$value/is) { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '!~'  && $data && $data !~ /$value/s)  { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '!~i' && $data && $data !~ /$value/is) { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
     }
 
     if ($notwant && @hash) { last ;}
@@ -1095,7 +1107,7 @@ sub data_pointer {
 
 sub DESTROY {
   my $this = shift ;
-  $$this->clean ;
+  $$this->clean if( $this && $$this ) ; # In case object was messed with ( bug 62091 ) 
 }
 
 ###################
@@ -2059,8 +2071,9 @@ detected using this roles:
     
     \s \w \d
     !"#$%&'()*+,-./:;<=>?@[\]^`{|}~
-    €‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿
-    ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ
+    0x80, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8e, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9e, 0x9f, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe, 0xbf, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf, 0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff, 0x20, 
+
+  TODO: 0x81, 0x8d, 0x8f, 0x90, 0xa0 
   
   CDATA:
   - If have tags: <...>
@@ -2317,11 +2330,53 @@ L<XML.com|http://www.xml.com>
 
 =head1 AUTHOR
 
-Graciliano M. P. <gm@virtuasites.com.br>
+Graciliano M. P. C<< <gm at virtuasites.com.br> >>
 
 I will appreciate any type of feedback (include your opinions and/or suggestions). ;-P
 
 Enjoy and thanks for who are enjoying this tool and have sent e-mails! ;-P
+
+=head1 CURRENT MAINTAINER
+
+Harish Madabushi, C<< <harish.tmh at gmail.com> >>
+
+=head1 BUGS
+
+Please report any bugs or feature requests to C<bug-xml-smart at rt.cpan.org>, or through
+the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=XML-Smart>.  Both the author and the
+maintainer will be notified, and then you'll automatically be notified of progress on your bug as changes are made.
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc XML::Smart
+
+You can also look for information at:
+
+=over 5
+
+=item * RT: CPAN's request tracker (report bugs here)
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=XML-Smart>
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L<http://annocpan.org/dist/XML-Smart>
+
+=item * CPAN Ratings
+
+L<http://cpanratings.perl.org/d/XML-Smart>
+
+=item * Search CPAN
+
+L<http://search.cpan.org/dist/XML-Smart/>
+
+=item * GitHub CPAN
+
+L<https://github.com/harishmadabushi/XML-Smart>
+
+=back
 
 =head1 THANKS
 
@@ -2331,7 +2386,9 @@ Thanks to Ted Haining to point a Perl-5.8.0 bug for tied keys of a HASH.
 
 Thanks to everybody that have sent ideas, patches or pointed bugs.
 
-=head1 COPYRIGHT
+=head1 LICENSE AND COPYRIGHT
+
+Copyright 2003 Graciliano M. P.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

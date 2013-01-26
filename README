@@ -1,16 +1,14 @@
-##############
-# XML::SMART #
-##############
+XML::SMART
 
 XML::Smart - A Smart, easy and powerful way to access/create XML files/data.
 
-###############
-# DESCRIPTION #
-###############
+
+
+DESCRIPTION
 
 This module has an easy way to access/create XML data. It's based on the HASH
 tree that is made of the XML data, and enable a dynamic access to it with the
-Perl syntax for Hashe and Array, without needing to care if you have a Hashe or an
+Perl syntax for Hash and Array, without needing to care if you have a Hash or an
 Array in the tree. In other words, B<each point in the tree work as a Hash and
 an Array at the same time>!
 
@@ -23,14 +21,15 @@ load XML from the Web (just pasting an URL as a file path) and it has an easy
 way to send XML data through socket, just adding the length of the data in
 the <?xml?> header.
 
-You can use I<XML::Smart> with L<XML::Parser>, or with the 2 standart parsers of
+You can use XML::Smart with XML::Parser, or with the 2 standart parsers of
 XML::Smart:
 
-** See POD for documentation and examples!
+   XML::Smart::Parser 
+   XML::Smart::HTMLParser
 
-################
-# INSTALLATION #
-################
+
+
+INSTALLATION
 
 To install this module type the following:
 
@@ -39,28 +38,71 @@ To install this module type the following:
    make test
    make install
 
-################
-# DEPENDENCIES #
-################
+
+
+
+DEPENDENCIES
+
 
 Object::MultiType 0.3 -> I made this module specially for XML::Smart,
                          but can be used in others too ;-P.                     
 
 XML::Parser (OPTIONAL)
 
-##########
-# AUTHOR #
-##########
 
-Graciliano M. P. <gm@virtuasites.com.br>
+
+TODO
+
+  * Finish XPath implementation.
+  * DTD.
+  * Implement a better way to declare meta tags.
+
+
+
+
+AUTHOR
+
+Graciliano M. P. C<< <gm at virtuasites.com.br> >>
 
 I will appreciate any type of feedback (include your opinions and/or suggestions). ;-P
 
-############# 
-# COPYRIGHT #
-#############
-
-This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+Enjoy and thanks for who are enjoying this tool and have sent e-mails! ;-P
 
 
 
+CURRENT MAINTAINER
+
+Harish Madabushi, C<< <harish.tmh at gmail.com> >>
+
+
+
+SUPPORT AND DOCUMENTATION
+
+After installing, you can find documentation for this module with the
+perldoc command.
+
+    perldoc XML::Smart
+
+You can also look for information at:
+
+    RT, CPAN's request tracker (report bugs here)
+        http://rt.cpan.org/NoAuth/Bugs.html?Dist=XML-Smart
+
+    AnnoCPAN, Annotated CPAN documentation
+        http://annocpan.org/dist/XML-Smart
+
+    CPAN Ratings
+        http://cpanratings.perl.org/d/XML-Smart
+
+    Search CPAN
+        http://search.cpan.org/dist/XML-Smart/
+
+    GitHub CPAN
+        https://github.com/harishmadabushi/XML-Smart
+
+
+
+LICENSE AND COPYRIGHT
+
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.

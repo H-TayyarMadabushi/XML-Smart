@@ -2,7 +2,7 @@
 ## Name:        Data.pm
 ## Purpose:     XML::Smart::Data - Generate XML data.
 ## Author:      Graciliano M. P.
-## Modified by:
+## Modified by: Harish Madabushi
 ## Created:     28/09/2003
 ## RCS-ID:      
 ## Copyright:   (c) 2003 Graciliano M. P.
@@ -13,7 +13,7 @@
 package XML::Smart::Data ;
 
 our ($VERSION , @ISA) ;
-$VERSION = '0.01' ;
+$VERSION = '0.03' ;
 
 require Exporter ;
 @ISA = qw(Exporter) ;
@@ -87,7 +87,7 @@ sub data {
   }
 
   my $enc = 'iso-8859-1' ;
-  if ($unicode) { $enc = 'utf-8' ;}
+  if ($unicode) { $enc = 'UTF-8' ;}
     
   my $meta ;
   if ( $args{meta} ) {

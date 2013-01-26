@@ -1,6 +1,18 @@
 Revision history for Perl extension XML::Smart.
 
 
+1.71  2013-1-26
+    - Updated tests to use strict and warnings 
+    - Added basic tests such as load
+    - Moved tests to t/
+    - Gramatical Corrections to POD
+    - Removed binary data from POD ( bug id 53321 ) 
+    - Updated list of binary data thats handled. 
+    - Tree.pm updated to allow warnings after usage ( patch from bug ticket id: 27310 )
+    - XML encoding declaration changed from utf-8 to UTF-8 ( bug id 76668 )
+    - Fixed URL tests ( bug id 34562 fix provided )
+    - Check added for existence of object in destructor ( bug id 62091 fix provided )
+
 1.6.9 2004-9-21
     - dump_tree() and similars methods will dump hash keys sorted now.
     - Hooks on_start, on_char and on_end for the parser will receive the parser object too.

@@ -11,9 +11,10 @@
 #############################################################################
 
 package XML::Smart::Base64 ;
-our $VERSION = '1.1' ;
+use strict                 ;
+use warnings               ;
 
-no warnings ;
+our $VERSION = '1.1'       ;
 
 my ($BASE64_PM) ;
 eval("use MIME::Base64 ()") ;

@@ -2,7 +2,7 @@
 ## Name:        DTD.pm
 ## Purpose:     XML::Smart::DTD - Apply DTD over a XML::Smart object.
 ## Author:      Graciliano M. P.
-## Modified by:
+## Modified by: Harish Madabushi
 ## Created:     25/05/2004
 ## RCS-ID:      
 ##
@@ -14,13 +14,15 @@
 ##              modify it under the same terms as Perl itself
 #############################################################################
 
-package XML::Smart::DTD ;
+package XML::Smart::DTD                                        ;
+
+use strict                                                     ;
+use warnings                                                   ;
+
+use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 our ($VERSION , @ISA) ;
-$VERSION = '0.01' ;
-
-use strict ;
-no warnings ;
+$VERSION = '0.03' ;
 
 ########
 # VARS #
@@ -268,11 +270,15 @@ sub attr_exists {
 sub is_attr_req {
   my $this = shift ;
   my ( $tag , $attr ) = @_ ;
-  return undef if !$this->{tree}{$tag} || !$this->{tree}{$tag}{attributes}{$attr} ;
+
+  _unset_sig_warn() ;
+  my $attr_check = $this->{tree}{$tag}{attributes}{$attr} ;
+  _reset_sig_warn() ;
+  return undef if( !$this->{tree}{$tag} || !$attr_check ) ;
   
   my $opt = @{$this->{tree}{$tag}{attributes}{$attr}}[1] ;
   
-  return 1 if $opt =~ /#REQUIRED/i ;
+  return 1 if( $opt && ($opt =~ /#REQUIRED/i ) ) ;
   return undef ;
 }
 
@@ -499,8 +505,8 @@ sub ParseDTD {
     while ($attributes =~ s/^\s*$AttDef//io) {
       my ($name,$type,$option,$default) = ($1,$2,$3,$4);
       
-      if    ( $default =~ /^"(.*?)"$/ ) { $default = $1 ; $default =~ s/\\"/"/gs ;}
-      elsif ( $default =~ /^'(.*?)'$/ ) { $default = $1 ; $default =~ s/\\'/'/gs ;}
+      if    ( $default && ( $default =~ /^"(.*?)"$/ ) ) { $default = $1 ; $default =~ s/\\"/"/gs ;}
+      elsif ( $default && ( $default =~ /^'(.*?)'$/ ) ) { $default = $1 ; $default =~ s/\\'/'/gs ;}
       
       $elements{$element}->{attributes}->{$name} = [$type,$option,$default,undef];
       
@@ -725,12 +731,17 @@ sub apply_dtd {
 }
 
 sub _apply_dtd {
+
   my ($dtd , $tree , $tag , $ar_i , $prev_tree , $prev_tag , $prev_exists , $parsed , %opts) = @_ ;
+  _unset_sig_warn() ;
   
   ##print "$tag>> $tree , $tag , $prev_tree , $prev_tag , $parsed >> $opts{no_delete}\n" ;
   
   if ( ref($tree) ) {
-    if ($$parsed{"$tree"}) { return ;}
+    if ($$parsed{"$tree"}) { 
+	_reset_sig_warn() ;
+	return ;
+    }
     ++$$parsed{"$tree"} ;
   }
   
@@ -771,8 +782,10 @@ sub _apply_dtd {
             
             my (@new_order , %order) ;
             foreach my $order_i ( @order ) {
-              push(@new_order , (($order_i) x ($in_order{$order_i} || 1))) ;
-              $order{$order_i} = 1 ;
+		_unset_sig_warn() ;
+		push(@new_order , (($order_i) x ($in_order{$order_i} || 1))) ;
+		$order{$order_i} = 1 ;
+		_reset_sig_warn() ;
             }
             
             foreach my $order_i ( @{ $tree->{'/order'} } ) {
@@ -793,12 +806,12 @@ sub _apply_dtd {
     foreach my $Key ( keys %$tree ) {
       if ($Key eq '' || $Key eq '/order' || $Key eq '/nodes' || $Key eq 'CONTENT') { next ;}
       
-      if ( ($tag eq '' && $dtd->elem_exists($Key)) || ($tag ne '' && $dtd->child_exists($tag , $Key)) ) {
-        if ( $tree->{'/nodes'}{$Key} =~ /^(\w+,\d+),(\d*)/ ) { $tree->{'/nodes'}{$Key} = "$1,1" ;}
+      if ( ( $tag eq '' && $dtd->elem_exists($Key)) || ( $tag ne '' && $dtd->child_exists($tag , $Key)) ) {
+	if ( $tree->{'/nodes'}{$Key} && ( $tree->{'/nodes'}{$Key} =~ /^(\w+,\d+),(\d*)/ ) ) { $tree->{'/nodes'}{$Key} = "$1,1" ;}
         else { $tree->{'/nodes'}{$Key} = 1 ;}
         
         if ( !ref($tree->{$Key}) ) {
-          my $content = $tree->{$Key} ;
+          my $content = ( $tree->{$Key} ) ? $tree->{$Key} : '';
           $tree->{$Key} = {} if !ref $tree->{$Key} ;
           $tree->{$Key}{CONTENT} = $content if $content ne '' ;
         }
@@ -809,8 +822,7 @@ sub _apply_dtd {
         }
         
         _apply_dtd($dtd , $tree->{$Key} , $Key , undef , $tree , $tag , 1, $parsed , %opts) ;
-      }
-      elsif ( $tag ne '' && $dtd->attr_exists($tag , $Key) ) {
+      } elsif ( $tag ne '' && $dtd->attr_exists($tag , $Key) ) {
         delete $tree->{'/nodes'}{$Key} ;
         if ( ref($tree->{$Key}) eq 'HASH' && exists $tree->{$Key}{CONTENT} && (keys %{$tree->{$Key}}) == 1 ) {
           my $content = $tree->{$Key}{CONTENT} ;
@@ -864,6 +876,7 @@ sub _apply_dtd {
 
   delete $$parsed{"$tree"} if ref($tree) ;
   
+  _reset_sig_warn() ;
   return 1 ;
 }
 

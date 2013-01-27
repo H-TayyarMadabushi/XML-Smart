@@ -22,3 +22,4 @@ lib/XML/Smart/Tree.pm
 lib/XML/Smart/FAQ.epod
 lib/XML/Smart/Entity.pm
 lib/XML/Smart/Data.pm
+lib/XML/Smart/Shared.pm

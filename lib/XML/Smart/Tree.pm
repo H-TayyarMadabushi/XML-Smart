@@ -10,12 +10,13 @@
 ##              modify it under the same terms as Perl itself
 #############################################################################
 
-package XML::Smart::Tree ;
+package XML::Smart::Tree                                       ;
 
-use XML::Smart::Entity qw(_parse_basic_entity) ;
+use strict                                                     ;
+use warnings                                                   ;
 
-use strict qw(vars) ;
-no  warnings ;
+use XML::Smart::Entity qw(_parse_basic_entity)                 ;
+use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 our ($VERSION) ;
 $VERSION = '1.1' ;
@@ -30,19 +31,6 @@ my $DEFAULT_LOADED ;
 
 use vars qw($NO_XML_PARSER);
 
-my ( $SIG_WARN , $SIG_DIE )  ;
-
-sub _unset_sig_warn {
-    $SIG_WARN = $SIG{__WARN__} ;
-    $SIG_DIE  = $SIG{__DIE__}  ;
-    $SIG{__WARN__} = sub {} ;
-    $SIG{__DIE__}  = sub {} ;
-}
-
-sub _reset_sig_warn {
-    $SIG{__WARN__} = $SIG_WARN ;
-    $SIG{__DIE__}  = $SIG_DIE  ;
-}
 
 ###################
 # LOAD_XML_PARSER #
@@ -121,27 +109,25 @@ sub load {
   }
   
   my $ok ;
-  if ($module eq 'XML_Parser') {
+  if( $module && ( $module eq 'XML_Parser' ) ) {
     $PARSERS{XML_Parser} = 1 if &load_XML_Parser() ;
     $ok = $PARSERS{XML_Parser} ;
-  }
-  elsif ($module eq 'XML_Smart_Parser') {
-    $PARSERS{XML_Smart_Parser} = 1 if !$PARSERS{XML_Smart_Parser} && &load_XML_Smart_Parser() ;
-    $ok = $PARSERS{XML_Smart_Parser} ;
-  }
-  elsif ($module eq 'XML_Smart_HTMLParser') {
-    $PARSERS{XML_Smart_HTMLParser} = 1 if !$PARSERS{XML_Smart_HTMLParser} && &load_XML_Smart_HTMLParser() ;
-    $ok = $PARSERS{XML_Smart_HTMLParser} ;
+  } elsif ( $module && ( $module eq 'XML_Smart_Parser' ) ) {
+      $PARSERS{XML_Smart_Parser} = 1 if !$PARSERS{XML_Smart_Parser} && &load_XML_Smart_Parser() ;
+      $ok = $PARSERS{XML_Smart_Parser} ;
+  } elsif( $module and ( $module eq 'XML_Smart_HTMLParser' ) ) {
+      $PARSERS{XML_Smart_HTMLParser} = 1 if !$PARSERS{XML_Smart_HTMLParser} && &load_XML_Smart_HTMLParser() ;
+      $ok = $PARSERS{XML_Smart_HTMLParser} ;
   }
   
   if (!$ok && !$DEFAULT_LOADED) {
-    $PARSERS{XML_Parser} = 1 if &load_XML_Parser() ;
-    $module = 'XML_Parser' ;
-    if ( !$PARSERS{XML_Parser} ) {
-      $PARSERS{XML_Smart_Parser} = 1 if &load_XML_Smart_Parser() ;  
-      $module = 'XML_Smart_Parser' ;
-    }
-    $DEFAULT_LOADED = 1 ;
+      $PARSERS{XML_Parser} = 1 if &load_XML_Parser() ;
+      $module = 'XML_Parser' ;
+      if ( !$PARSERS{XML_Parser} ) {
+	  $PARSERS{XML_Smart_Parser} = 1 if &load_XML_Smart_Parser() ;  
+	  $module = 'XML_Smart_Parser' ;
+      }
+      $DEFAULT_LOADED = 1 ;
   }
   
   return($module) ;
@@ -183,9 +169,11 @@ sub parse {
   else { croak("Can't find a parser for XML!") ;}
   
   shift(@_) ;
-  if ( $_[0] =~ /^\s*(?:XML_\w+|html?|re\w+|smart)\s*$/i) { shift(@_) ;}
+  if ( $_[0] && ( $_[0] =~ /^\s*(?:XML_\w+|html?|re\w+|smart)\s*$/i ) ) { shift(@_) ;}
 
+  _unset_sig_warn() ;
   my ( %args ) = @_ ;
+  _reset_sig_warn() ;
   
   if ( $args{lowtag} ) { $xml->{SMART}{tag} = 1 ;}
   if ( $args{upertag} ) { $xml->{SMART}{tag} = 2 ;}
@@ -272,16 +260,20 @@ sub _Init {
 sub _Start {
   my $this = shift ;
   
-  if ( $this->{LAST_CALL} eq 'char' ) { _Char_process( $this , delete $this->{CONTENT_BUFFER} ) ;}
+  if ( $this->{LAST_CALL} && ( $this->{LAST_CALL} eq 'char' ) ) { 
+      _Char_process( $this , delete $this->{CONTENT_BUFFER} ) ;
+  }
   
   ##print "START>> @_\n" ;
   
   $this->{LAST_CALL} = 'start' ;
-  
-  my ($tag , %args) = @_ ;
-  
-  if    ( $this->{SMART}{tag} == 1 ) { $tag = lc($tag) ;}
-  elsif ( $this->{SMART}{tag} == 2 ) { $tag = uc($tag) ;}
+
+  _unset_sig_warn();
+  my ( $tag , %args ) = @_ ;
+  _reset_sig_warn();
+
+  if    ( $this->{SMART}{tag} && ( $this->{SMART}{tag} == 1 ) ) { $tag = lc($tag) ;}
+  elsif ( $this->{SMART}{tag} && ( $this->{SMART}{tag} == 2 ) ) { $tag = uc($tag) ;}
   
   $this->{PARSING}{p}{'/nodes'}{$tag} = 1 if !$this->{SMART}{no_nodes} ;
   
@@ -393,7 +385,7 @@ sub _Char_process {
     $this->{PARSING}{p}{'dt:dt'} = delete $this->{PARSING}{p}{'DT:DT'} ;
   }
   
-  if ( $this->{PARSING}{p}{'dt:dt'} =~ /binary\.base64/si ) {
+  if ( $this->{PARSING}{p}{'dt:dt'} && ( $this->{PARSING}{p}{'dt:dt'} =~ /binary\.base64/si ) ) {
     require XML::Smart::Base64 ;
     $content = &XML::Smart::Base64::decode_base64($content) ;
     delete $this->{PARSING}{p}{'dt:dt'} ;
@@ -464,8 +456,8 @@ sub _End { ##print "END>> @_[1] >> $_[0]->{PARSING}{p}{'/tag'}\n" ;
   
   my $tag = shift ;
   
-  if    ( $this->{SMART}{tag} == 1 ) { $tag = lc($tag) ;}
-  elsif ( $this->{SMART}{tag} == 2 ) { $tag = uc($tag) ;}
+  if    ( $this->{SMART}{tag} && ( $this->{SMART}{tag} == 1 ) ) { $tag = lc($tag) ;}
+  elsif ( $this->{SMART}{tag} && ( $this->{SMART}{tag} == 2 ) ) { $tag = uc($tag) ;}
 
   if ( $this->{PARSING}{p}{'/tag'} ne $tag ) { return ;}
 

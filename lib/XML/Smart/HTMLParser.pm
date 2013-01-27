@@ -2,7 +2,7 @@
 ## Name:        HTMLParser.pm
 ## Purpose:     XML::Smart::HTMLParser
 ## Author:      Graciliano M. P.
-## Modified by:
+## Modified by: Harish Madabushi
 ## Created:     29/05/2003
 ## RCS-ID:      
 ## Copyright:   (c) 2003 Graciliano M. P.
@@ -10,14 +10,17 @@
 ##              modify it under the same terms as Perl itself
 #############################################################################
 
-package XML::Smart::HTMLParser ;
-use 5.006 ;
+package XML::Smart::HTMLParser                                 ;
 
-use strict qw(vars) ;
-no warnings ;
+use 5.006                                                      ;
+
+use strict                                                     ;
+use warnings                                                   ;
+
+use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 our ($VERSION , @ISA) ;
-$VERSION = '1.0' ;
+$VERSION = '1.1' ;
 
 #######
 # NEW #
@@ -30,7 +33,9 @@ sub new {
 
   $this = bless {} => $class ;
   
+  _unset_sig_warn() ;
   my %args = @_ ;
+  _reset_sig_warn() ;
   $this->setHandlers(%args) ;
   
   $this->{NOENTITY} = 1 ;
@@ -44,7 +49,9 @@ sub new {
 
 sub setHandlers {
   my $this = shift ;
+  _unset_sig_warn() ;
   my %args = @_;
+  _reset_sig_warn() ;
     
   $this->{Init}  = $args{Init} || sub{} ;
   $this->{Start} = $args{Start} || sub{} ;

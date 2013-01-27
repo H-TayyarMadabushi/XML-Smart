@@ -3,6 +3,7 @@
 ## Purpose:     XML::Smart::Parser
 ## Author:      Paul Kulchenko (paulclinger@yahoo.com)
 ## Modified by: Graciliano M. P.
+## Modified by: Harish Madabushi
 ## Created:     10/05/2003
 ## RCS-ID:      
 ## Copyright:   2000-2001 Paul Kulchenko
@@ -31,14 +32,16 @@
 
 package XML::Smart::Parser ;
 
-no warnings ;
-use strict;
-use vars qw($VERSION);
-$VERSION = 1.2 ;
+use strict                 ;
+no  warnings               ;
+
+use vars qw($VERSION)      ;
+
+$VERSION = 1.3 ;
 
 my(@parsed , @stack, $level) ;
 
- &compile();
+&compile();
 
 sub new { 
   my $class = ($_[0] =~ /^[\w:]+$/) ? shift(@_) : __PACKAGE__ ;
@@ -118,7 +121,7 @@ sub parse {
   parse_re($_[0]);
   final();
 
-  no strict qw(refs);
+  no strict qw(refs) ;
   
   my $final = pop(@parsed) ; pop(@parsed) ;
 

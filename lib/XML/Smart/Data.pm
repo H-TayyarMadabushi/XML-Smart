@@ -10,27 +10,32 @@
 ##              modify it under the same terms as Perl itself
 #############################################################################
 
-package XML::Smart::Data ;
+package XML::Smart::Data                                       ;
+
+
+use strict                                                     ;
+use warnings                                                   ;
+
+require Exporter                                               ;
+
+use XML::Smart::Entity qw(_add_basic_entity)                   ;
+use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
+
 
 our ($VERSION , @ISA) ;
 $VERSION = '0.03' ;
 
-require Exporter ;
 @ISA = qw(Exporter) ;
 
 our @EXPORT = qw(data) ;
 our @EXPORT_OK = @EXPORT ;
-
-use strict ;
-no warnings ;
-
-use XML::Smart::Entity qw(_add_basic_entity) ;
 
 ########
 # DATA #
 ########
 
 sub data {
+  _unset_sig_warn() ;
   my $this = shift ;
   my ( %args ) = @_ ;
   
@@ -142,7 +147,11 @@ sub data {
   
   if ($xml eq '') { $data =~ s/^\s+//gs ;}
   
-  if (wantarray) { return($data , $unicode) ;}
+  if (wantarray) { 
+      _reset_sig_warn() ;
+      return($data , $unicode) ;
+  }
+  _reset_sig_warn() ;
   return($data) ;
 }
 
@@ -151,6 +160,7 @@ sub data {
 #################
 
 sub is_valid_tree {
+  _unset_sig_warn() ;
   my ( $tree ) = @_ ;
   my $found ;
   if (ref($tree) eq 'HASH') {
@@ -170,6 +180,7 @@ sub is_valid_tree {
   }
   elsif (ref($tree) eq 'SCALAR' && $$tree ne '') { $found = 1 ;}
   
+  _reset_sig_warn() ;
   return $found ;
 }
 
@@ -178,14 +189,22 @@ sub is_valid_tree {
 ###############
 
 sub _is_unicode {
+  _unset_sig_warn() ;
   if ($] >= 5.008001) {
-    if ( utf8::is_utf8($_[0])) { return 1 ;}
+    if ( utf8::is_utf8($_[0])) { 
+	_reset_sig_warn() ;
+	return 1 ;
+    }
   }
   elsif ($] >= 5.008) {
     require Encode ;
-    if ( Encode::is_utf8($_[0])) { return 1 ;}
+    if ( Encode::is_utf8($_[0])) { 
+	_reset_sig_warn() ;
+	return 1 ;
+    }
   }
   elsif ( $] >= 5.007 ) {
+    _reset_sig_warn() ;
     my $is = eval(q`
       if ( $_[0] =~ /[\x{100}-\x{10FFFF}]/s) { return 1 ;}
       return undef ;
@@ -196,9 +215,11 @@ sub _is_unicode {
   else {
     ## No Perl internal support for UTF-8! ;-/
     ## Is better to handle as Latin1.
+    _reset_sig_warn() ;
     return undef ;
   }
 
+  _reset_sig_warn() ;
   return undef ;
 }
 
@@ -207,12 +228,17 @@ sub _is_unicode {
 #########
 
 sub _data {
+
+  _unset_sig_warn() ;
   my ( $data , $tree , $tag , $level , $prev_tree , $parsed , $ar_i , $node_type , @stat ) = @_ ;
 
   if (ref($tree) eq 'XML::Smart') { $tree = defined $$tree->{content} ? $$tree->{content} : $$tree->{point} ;}
   
   if ( ref($tree) ) {
-    if ($$parsed{"$tree"}) { return ;}
+    if ($$parsed{"$tree"}) { 
+	_reset_sig_warn() ;
+	return ;
+    }
     ++$$parsed{"$tree"} ;
   }
   
@@ -461,7 +487,9 @@ sub _data {
       if    ($stat[3] == 1) { $k = "\L$k\E" ;}
       elsif ($stat[3] == 2) { $k = "\U$k\E" ;}
       delete $$parsed{"$tree"} if ref($tree) ;
-      return " $k=" . &_add_quote($v) ;
+      my $return_val = " $k=" . &_add_quote($v)  ;
+      _reset_sig_warn() ;
+      return $return_val ;
     }
     else { $$data .= $tags ;}
   }
@@ -470,24 +498,31 @@ sub _data {
     if    ($stat[3] == 1) { $k = "\L$k\E" ;}
     elsif ($stat[3] == 2) { $k = "\U$k\E" ;}
     delete $$parsed{"$tree"} if ref($tree) ;
-    return " $k=" . &_add_quote($$tree) ;
+    my $return_val = " $k=" . &_add_quote($$tree) ;
+    _reset_sig_warn() ;
+    return $return_val ;
   }
   elsif (ref($tree)) {
     my $k = $stat[4] ? $tag : &_check_key($tag) ;
     if    ($stat[3] == 1) { $k = "\L$k\E" ;}
     elsif ($stat[3] == 2) { $k = "\U$k\E" ;}
     delete $$parsed{"$tree"} if ref($tree) ;
-    return " $k=" . &_add_quote("$tree") ;
+    my $return_val = " $k=" . &_add_quote("$tree") ;
+    _reset_sig_warn() ;
+    return $return_val ;
   }
   else {
     my $k = $stat[4] ? $tag : &_check_key($tag) ;
     if    ($stat[3] == 1) { $k = "\L$k\E" ;}
     elsif ($stat[3] == 2) { $k = "\U$k\E" ;}
     delete $$parsed{"$tree"} if ref($tree) ;
-    return " $k=" . &_add_quote($tree) ;
+    my $return_val = " $k=" . &_add_quote($tree) ;
+    _reset_sig_warn() ;
+    return $return_val ;
   }
 
   delete $$parsed{"$tree"} if ref($tree) ;
+  _reset_sig_warn() ;
   return ;
 }
 
@@ -513,13 +548,16 @@ sub _check_tag { &_check_key ;}
 ##############
 
 sub _check_key {
+  _unset_sig_warn() ;
   if ($_[0] =~ /(?:^[.:-]|[^\w\:\.\-])/s) {
     my $k = $_[0] ;
     $k =~ s/^[.:-]+//s ;
     $k =~ s/[^\w\:\.\-]+/_/gs ;
     return( $k ) ;
   }
-  return( $_[0] ) ;
+  my $return_val = $_[0] ;
+  _reset_sig_warn() ;
+  return( $return_val ) ;
 }
 
 ##############
@@ -527,6 +565,7 @@ sub _check_key {
 ##############
 
 sub _add_quote {
+  _unset_sig_warn() ;
   my ($data) = @_ ;
   $data =~ s/\\$/\\\\/s ;
   
@@ -535,17 +574,29 @@ sub _add_quote {
   my $q1 = ($data =~ /"/s) ? 1 : undef ;
   my $q2 = ($data =~ /'/s) ? 1 : undef ;
   
-  if (!$q1 && !$q2) { return( qq`"$data"` ) ;}
+  if (!$q1 && !$q2) { 
+      _reset_sig_warn() ;
+      return( qq`"$data"` ) ;
+  }
   
   if ($q1 && $q2) {
     $data =~ s/"/&quot;/gs ;
+    _reset_sig_warn() ;
     return( qq`"$data"` ) ;
   }
   
-  if ($q1) { return( qq`'$data'` ) ;}
-  if ($q2) { return( qq`"$data"` ) ;}
+  if ($q1) { 
+      _reset_sig_warn() ;
+      return( qq`'$data'` ) ;
+  }
+  if ($q2) { 
+      _reset_sig_warn() ;
+      return( qq`"$data"` ) ;
+  }
 
+  _reset_sig_warn() ;
   return( qq`"$data"` ) ;
+
 }
 
 #######

@@ -83,6 +83,7 @@ sub NO_XML_PARSER {
 #######
 
 sub new {
+
     my $class = shift ;
     my $file  = shift ;
     my $parser = ($_[0] and $_[0] !~ /^(?:uper|low|arg|on|no|use)\w+$/i) ? shift(@_) : '' ;
@@ -970,18 +971,20 @@ sub find_arg {
       $data = ref($hash) eq 'HASH' ? $$hash{$name} : $hash ;
       $data = $$data{CONTENT} if ref($data) eq 'HASH' ;
       
-      if    ($type eq 'eq'  && $data && $data eq $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq 'ne'  && $data && $data ne $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '=='  && $data && $data == $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '!='  && $data && $data != $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '<='  && $data && $data <= $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '>='  && $data && $data >= $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '<'   && $data && $data <  $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '>'   && $data && $data >  $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '=~'  && $data && $data =~ /$value/s)  { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '=~i' && $data && $data =~ /$value/is) { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '!~'  && $data && $data !~ /$value/s)  { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
-      elsif ($type eq '!~i' && $data && $data !~ /$value/is) { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      _unset_sig_warn() ;
+      if    ($type eq 'eq'  && $data eq $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq 'ne'  && $data ne $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '=='  && $data == $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '!='  && $data != $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '<='  && $data <= $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '>='  && $data >= $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '<'   && $data <  $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '>'   && $data >  $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '=~'  && $data =~ /$value/s)  { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '=~i' && $data =~ /$value/is) { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '!~'  && $data !~ /$value/s)  { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      elsif ($type eq '!~i' && $data !~ /$value/is) { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
+      _reset_sig_warn() ;
     }
 
     if ($notwant && @hash) { last ;}

@@ -2,7 +2,7 @@
 ## Name:        XPath.pm
 ## Purpose:     XML::Smart::XPath - Compatibility with XPath (through XML::XPath).
 ## Author:      Graciliano M. P.
-## Modified by:
+## Modified by: Harish Madabushi
 ## Created:     01/10/2003
 ## RCS-ID:      
 ## Copyright:   (c) 2003 Graciliano M. P.
@@ -10,21 +10,26 @@
 ##              modify it under the same terms as Perl itself
 #############################################################################
 
-package XML::Smart::XPath ;
+package XML::Smart::XPath                                      ;
+
+use 5.006                                                      ;
+
+use strict                                                     ;
+use warnings                                                   ;
+
+require Exporter                                               ;
+
+use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 our ($VERSION , @ISA) ;
-$VERSION = '0.01' ;
+$VERSION = '0.03' ;
 
-require Exporter ;
 @ISA = qw(Exporter) ;
 
 our @EXPORT = qw(xpath XPath xpath_pointer XPath_pointer) ;
 our @EXPORT_OK = @EXPORT ;
 
 my $load_XPath ;
-
-use strict ;
-no warnings ;
 
 ##############
 # LOAD_XPATH #

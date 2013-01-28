@@ -9,8 +9,10 @@ t/copy_fail.t
 t/base_tests.t
 t/boilerplate.t
 t/pod-coverage.t
+t/obj_copy_meta.t
 t/force_case_bug_fix.t
 t/base_tests_multi_obj.t
+t/base_tests_for_objcopy.t
 lib/XML/Smart.pm
 lib/XML/Smart/Tutorial.pod
 lib/XML/Smart/Parser.pm
@@ -26,3 +28,5 @@ lib/XML/Smart/FAQ.epod
 lib/XML/Smart/Entity.pm
 lib/XML/Smart/Data.pm
 lib/XML/Smart/Shared.pm
+
+

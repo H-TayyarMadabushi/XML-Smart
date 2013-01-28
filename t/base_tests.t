@@ -200,7 +200,7 @@ TEXT1 &amp; more
 <if.1>
   aaa
 </if.1>
-<!--  CMT  -->
+<!-- CMT -->
 <elsif.2>
   bbb
 </elsif.2></foo>
@@ -1283,9 +1283,6 @@ TEXT1 &amp; more
 } 
 
 #########################
-
-print "\nThe End! By!\n" ;
-
 
 1 ;
 

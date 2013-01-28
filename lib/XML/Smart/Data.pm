@@ -25,7 +25,7 @@ use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 use Data::Dump qw( dump ) ;
 
 our ($VERSION , @ISA) ;
-$VERSION = '0.03' ;
+$VERSION = '0.05' ;
 
 @ISA = qw(Exporter) ;
 
@@ -254,8 +254,6 @@ sub _data {
   $stat[1] -= 2 if $stat[1] > 1 ;
   
   my $tag_org = $tag ;
-  
-  print STDERR "$tag_org \n";
 
   $tag = $stat[4] ? $tag : &_check_tag($tag) ;
   if    ($stat[2] == 1) { $tag = "\L$tag\E" ;}
@@ -292,7 +290,7 @@ sub _data {
       if ( $Key eq '!--' && (!ref($$tree{$Key}) || ( ref($$tree{$Key}) eq 'HASH' && (keys %{$$tree{$Key}}) == 1 && (defined $$tree{$Key}{CONTENT} || defined $$tree{$Key}{content}) ) ) ) {
         my $ct = $$tree{$Key} ;
         if (ref $$tree{$Key}) { $ct = defined $$tree{$Key}{CONTENT} ? $$tree{$Key}{CONTENT} : $$tree{$Key}{content} ;} ;
-        if ( $ct ne '' ) { $tags .= "$ident<!-- $ct -->" ;}
+        if ( $ct ne '' ) { $tags .= "$ident<!--$ct-->" ;}
       }
       elsif (ref($$tree{$Key})) {
         my $k = $$tree{$Key} ;
@@ -349,8 +347,8 @@ sub _data {
             $tags .= qq`$ident<$k dt:dt="binary.base64">$base64</$k>`;
           }
         }
-      }
-    }
+      }  
+    } # foreach my $Key ( @all_keys ) { -- Contains       if ($Key eq '' || $Key eq '/order' || $Key eq '/nodes') { next ;} 
     
     foreach my $Key ( keys %array_i ) {
       if ( $array_i{$Key} ne 'ok' && $#{ $$tree{$Key} } >= $array_i{$Key} ) {

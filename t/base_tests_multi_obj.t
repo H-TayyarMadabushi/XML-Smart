@@ -204,7 +204,7 @@ TEXT1 &amp; more
 <if.1>
   aaa
 </if.1>
-<!--  CMT  -->
+<!-- CMT -->
 <elsif.2>
   bbb
 </elsif.2></foo>
@@ -1251,44 +1251,6 @@ TEXT1 &amp; more
 
 }
 #########################
-{
-
-
-    eval(q`use LWP::UserAgent`) ;
-    if ( !$@ ) {
-
-	if( $ENV{ URL_TESTS } ) { 
-  
-	    my $url = 'http://www.perlmonks.org/index.pl?node_id=16046' ;
-	    
-	    print STDERR "\nGetting URL... " ;
-		
-	    my $XML = XML::Smart->new($url , 'XML::Smart::Parser') ;
-		
-	    print STDERR "Test: " ;
-	    
-	    if ( $XML->{XPINFO}{INFO}{sitename} eq 'PerlMonks' ) { 
-		print STDERR "OK\n" ;
-	    } else {
-		print STDERR "ERROR!\n" ;
-		print STDERR "-----------------------------------------------\n" ;
-		print STDERR "The XML of the URL:\n\n" ;
-		print STDERR $XML->data ;
-		print STDERR "-----------------------------------------------\n" ;
-	    }
-	} else { 
-		print STDERR "Skipping URL test, Enable by setting ENV variable URL_TESTS \n" ;
-	}
-    } else { 
-	print "LWP::UserAgent not found - Skipping URL test!\n" ;
-    }
-
-    
-} 
-
-#########################
-
-print "\nThe End! By!\n" ;
 
 
 1 ;

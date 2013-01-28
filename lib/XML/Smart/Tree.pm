@@ -15,11 +15,13 @@ package XML::Smart::Tree                                       ;
 use strict                                                     ;
 use warnings                                                   ;
 
+use Carp                                                       ;
+
 use XML::Smart::Entity qw(_parse_basic_entity)                 ;
 use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 our ($VERSION) ;
-$VERSION = '1.3' ;
+$VERSION = '1.31' ;
 
 my %PARSERS = (
     XML_Parser => 0 ,
@@ -205,7 +207,10 @@ sub parse {
   Final => \&_Final ,
   ) ;
   
-  my $tree = $xml->parse($data);
+  my $tree ;
+  eval { 
+      $tree = $xml->parse($data);
+  }; croak( $@ ) if( $@ );
   return( $tree ) ;
 }
 

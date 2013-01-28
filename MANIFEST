@@ -3,9 +3,10 @@ Changes
 MANIFEST
 Makefile.PL
 t/pod.t
-t/base_tests.t
 t/00-load.t
 t/manifest.t
+t/copy_fail.t
+t/base_tests.t
 t/boilerplate.t
 t/pod-coverage.t
 t/force_case_bug_fix.t

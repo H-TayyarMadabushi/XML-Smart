@@ -246,7 +246,10 @@ sub base {
 sub back {
   my $this = shift ;
   
-  my @tree = @{$$this->{keyprev}} ;
+  my @tree ;
+  if( $$this->{keyprev} ) { 
+      @tree = @{$$this->{keyprev}} ;
+  }
   if (!@tree) { return $this ;}
   
   my $last = pop(@tree) ;
@@ -358,30 +361,37 @@ sub i {
 ########
 
 sub copy {
-  my $this = shift ;
 
-  my $copy = Object::MultiType->new(
-  boolsub   => \&boolean ,
-  scalarsub => \&content ,
-  tiearray  => 'XML::Smart::Tie::Array' ,
-  tiehash   => 'XML::Smart::Tie::Hash' ,
-  tieonuse  => 1 ,
-  code      => \&find_arg , 
-  ) ;
-  
-  $$copy->{tree} = &_copy_hash($this->tree) ;
-  $$copy->{keyprev} = $$this->{keyprev} ;
-  
-  bless($copy, ref($this)) ;
-  
-  my ( $back , $key , $i ) = $copy->back ;
-  
-  if ( $key ne '' ) {
-    $copy = $back->{$key} ;
-    $copy = $back->[$i] if $i ;
-  }
+    my $this = shift ;
     
-  return( $copy ) ;
+    my $copy = Object::MultiType->new(
+	boolsub   => \&boolean ,
+	scalarsub => \&content ,
+	tiearray  => 'XML::Smart::Tie::Array' ,
+	tiehash   => 'XML::Smart::Tie::Hash' ,
+	tieonuse  => 1 ,
+	code      => \&find_arg , 
+	) ;
+    
+    $$copy->{tree}    = &_copy_hash($this->tree) ;
+    $$copy->{keyprev} = $$this->{keyprev} ;
+
+    ## The following line fixes copy issues
+    $$copy->{point}   = $$copy->{tree};
+  
+    bless($copy, ref($this)) ;
+    
+    my ( $back , $key , $i ) = $copy->back ;
+    
+    _unset_sig_warn() ;
+    if( $key ne '' ) {
+	$copy = $back->{$key} ;
+	$copy = $back->[$i] if $i ;
+    }
+    _reset_sig_warn() ;
+    
+    return( $copy ) ;
+
 }
 
 ##############
@@ -637,15 +647,16 @@ sub nodes {
 ##############
 
 sub nodes_keys {
+
   my $this = shift ;
   
   return () if $this->null ;
 
+
   my $nodes = $this->{'/nodes'}->pointer ;
   my $pointer = $$this->{point} ;
-  
+
   my @nodes ;
-  
   foreach my $Key ( keys %$this ) {
     if ( $$nodes{$Key} || (ref($$pointer{$Key}) eq 'HASH') || (ref($$pointer{$Key}) eq 'ARRAY' && $#{$$pointer{$Key}} > 0)  ) {
       push(@nodes , $Key) ;

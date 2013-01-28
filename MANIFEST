@@ -3,11 +3,13 @@ Changes
 MANIFEST
 Makefile.PL
 t/pod.t
+t/base_tests.t
 t/00-load.t
 t/manifest.t
 t/boilerplate.t
 t/pod-coverage.t
-t/base_tests.t
+t/force_case_bug_fix.t
+t/base_tests_multi_obj.t
 lib/XML/Smart.pm
 lib/XML/Smart/Tutorial.pod
 lib/XML/Smart/Parser.pm

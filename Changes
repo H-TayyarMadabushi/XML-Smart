@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::Smart.
 
+1.73  2013-1-28
+    - Fixed bug 17834 in Tree.pm
+    - 
 
 1.71  2013-1-26
     - Updated all pm to use strict and warnings

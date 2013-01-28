@@ -26,6 +26,10 @@ my $DATA = q`<?xml version="1.0" encoding="iso-8859-1"?>
 </hosts>
 `;
 
+my $XML = new XML::Smart() ;
+$XML = new XML::Smart() ;
+$XML = new XML::Smart() ;
+
 ##if (0) {
 #########################
 {

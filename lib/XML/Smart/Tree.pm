@@ -19,7 +19,7 @@ use XML::Smart::Entity qw(_parse_basic_entity)                 ;
 use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 our ($VERSION) ;
-$VERSION = '1.1' ;
+$VERSION = '1.3' ;
 
 my %PARSERS = (
     XML_Parser => 0 ,
@@ -27,9 +27,13 @@ my %PARSERS = (
     XML_Smart_HTMLParser => 0 ,
     ) ;
 
-my $DEFAULT_LOADED ;
+## BUG - By making DEFAULT_LOADED a global variable it is working across objects! ( Watch for possible usage elsewhere )
+# my $DEFAULT_LOADED ;
 
 use vars qw($NO_XML_PARSER);
+
+use Data::Dump qw( dump ) ;
+
 
 
 ###################
@@ -96,6 +100,8 @@ sub load {
   my ( $parser ) = @_ ;
   my $module ;
   
+  my $DEFAULT_LOADED  ;
+
   if ($parser) {
     $parser =~ s/:+/_/gs ;
     $parser =~ s/\W//g ;
@@ -119,7 +125,7 @@ sub load {
       $PARSERS{XML_Smart_HTMLParser} = 1 if !$PARSERS{XML_Smart_HTMLParser} && &load_XML_Smart_HTMLParser() ;
       $ok = $PARSERS{XML_Smart_HTMLParser} ;
   }
-  
+
   if (!$ok && !$DEFAULT_LOADED) {
       $PARSERS{XML_Parser} = 1 if &load_XML_Parser() ;
       $module = 'XML_Parser' ;

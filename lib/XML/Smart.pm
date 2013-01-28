@@ -30,7 +30,9 @@ use XML::Smart::Tree                                           ;
 
 
 our ($VERSION) ;
-$VERSION = '1.71' ;
+$VERSION = '1.73' ;
+
+use Data::Dump qw( dump ) ;
 
 
 ###############
@@ -98,7 +100,7 @@ sub new {
 	) ;
     
     $parser = &XML::Smart::Tree::load($parser) ;
-    
+
     if ( !($file) or $file eq '') { $$this->{tree} = {} ;}
     else { $$this->{tree} = &XML::Smart::Tree::parse($file,$parser,@_) ;}
     

@@ -1157,19 +1157,20 @@ XML::Smart - A smart, easy and powerful way to access/create XML files/data.
 
 =head1 DESCRIPTION
 
-This module has an easy way to access/create XML data. It's based on the HASH
-tree that is made of the XML data, and enable a dynamic access to it with the
-Perl syntax for Hash and Array, without needing to care if you have a Hash or an
-Array in the tree. In other words, B<each point in the tree work as a Hash and
+This module provides an easy way to access/create XML data. It's based on a HASH
+tree created from the XML data, and enables dynamic access to it through the 
+standard Perl syntax for Hash and Array, without necessarily caring about which 
+you are working with. In other words, B<each point in the tree works as a Hash and
 an Array at the same time>!
 
-You also have extra resources, like a search for nodes by attribute, selection
-of an attribute value in each multiple node,  change the returned format, etc...
+This module additionally provides special resources such as: search for nodes by 
+attribute, select an attribute value in each multiple node,  change the returned 
+format, and so on.
 
-The module alson handle automatically binary data (encoding/decoding to/from base64),
+The module also automatically handles binary data (encoding/decoding to/from base64),
 CDATA (like contents with <tags>) and Unicode. It can be used to create XML files,
-load XML from the Web (just pasting an URL as a file path) and it has an easy
-way to send XML data through socket, just adding the length of the data in
+load XML from the Web ( just by using an URL as the file path ) and has an easy
+way to send XML data through sockets - just adding the length of the data in
 the <?xml?> header.
 
 You can use I<XML::Smart> with L<XML::Parser>, or with the 2 standart parsers of
@@ -1189,11 +1190,11 @@ I<XML::Smart::HTMLParser> can be used to load/parse wild/bad XML data, or HTML t
 
 You can find some extra documents about I<XML::Smart> at:
 
-=over 4
+=over 2
 
 =item L<XML::Smart::Tutorial> - Tutorial and examples for XML::Smart.
 
-=item L<XML::Smart::FAQ> - Frequently Asked Questions about XML::Smart.
+=item L<XML::Smart::FAQ>      - Frequently Asked Questions about XML::Smart.
 
 =back
 
@@ -1290,7 +1291,7 @@ The first argument can be:
   - File Handle (GLOB).
   - URL (Need LWP::UserAgent).
 
-If not paste, a null XML tree is started, where you should create your own
+If not passed, a null XML tree is started, where you should create your own
 XML data, than build/save/send it.
 
 =item PARSER B<(optional)>
@@ -1315,7 +1316,7 @@ Aliases for the options:
 I<Default:>
 
 If not set it will look for XML::Parser and load it.
-If XML::Parser can't be loaded it will use XML::Smart::Parser, that actually is a
+If XML::Parser can't be loaded it will use XML::Smart::Parser, which is actually a
 clone of XML::Parser::Lite with some fixes.
 
 =item OPTIONS

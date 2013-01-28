@@ -98,7 +98,9 @@ sub new {
 	tieonuse  => 1 ,
 	code      => \&find_arg , 
 	) ;
-    
+
+    $$this->{ parser } = $parser ;
+
     $parser = &XML::Smart::Tree::load($parser) ;
 
     if ( !($file) or $file eq '') { $$this->{tree} = {} ;}
@@ -363,24 +365,12 @@ sub i {
 sub copy {
 
     my $this = shift ;
-    
-    my $copy = Object::MultiType->new(
-	boolsub   => \&boolean ,
-	scalarsub => \&content ,
-	tiearray  => 'XML::Smart::Tie::Array' ,
-	tiehash   => 'XML::Smart::Tie::Hash' ,
-	tieonuse  => 1 ,
-	code      => \&find_arg , 
-	) ;
-    
-    $$copy->{tree}    = &_copy_hash($this->tree) ;
-    $$copy->{keyprev} = $$this->{keyprev} ;
 
-    ## The following line fixes copy issues
-    $$copy->{point}   = $$copy->{tree};
-  
-    bless($copy, ref($this)) ;
-    
+    my $copy = new( ref( $this ), $this->data(), $this->{ parser } ) ;
+    if( $$this->{keyprev} ) { 
+	$$copy->{keyprev} = $$this->{keyprev} ;
+    }
+
     my ( $back , $key , $i ) = $copy->back ;
     
     _unset_sig_warn() ;
@@ -389,8 +379,42 @@ sub copy {
 	$copy = $back->[$i] if $i ;
     }
     _reset_sig_warn() ;
+
+    return $copy ;
+
+
+
+    # my $copy = Object::MultiType->new(
+    # 	boolsub   => \&boolean ,
+    # 	scalarsub => \&content ,
+    # 	tiearray  => 'XML::Smart::Tie::Array' ,
+    # 	tiehash   => 'XML::Smart::Tie::Hash' ,
+    # 	tieonuse  => 1 ,
+    # 	code      => \&find_arg , 
+    # 	) ;
     
-    return( $copy ) ;
+    # $$copy->{tree}    = &_copy_hash($this->tree) ;
+    # if( $$this->{keyprev} ) { 
+    # 	$$copy->{keyprev} = $$this->{keyprev} ;
+    # }
+
+    # ## The following line fixes copy issues
+    # $$copy->{ point  } = $$copy->{ tree   } ;
+    # $$copy->{ parser } = $$this->{ parser } ;
+    # my $parser = &XML::Smart::Tree::load( $$this->{ parser }) ;
+
+    # bless($copy, ref($this)) ;
+    
+    # my ( $back , $key , $i ) = $copy->back ;
+    
+    # _unset_sig_warn() ;
+    # if( $key ne '' ) {
+    # 	$copy = $back->{$key} ;
+    # 	$copy = $back->[$i] if $i ;
+    # }
+    # _reset_sig_warn() ;
+    
+    # return( $copy ) ;
 
 }
 
@@ -399,6 +423,7 @@ sub copy {
 ##############
 
 sub _copy_hash {
+
   my ( $ref ) = @_ ;
   my $copy ;
   

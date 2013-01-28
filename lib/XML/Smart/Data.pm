@@ -22,6 +22,8 @@ use XML::Smart::Entity qw(_add_basic_entity)                   ;
 use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 
+use Data::Dump qw( dump ) ;
+
 our ($VERSION , @ISA) ;
 $VERSION = '0.03' ;
 
@@ -37,12 +39,15 @@ our @EXPORT_OK = @EXPORT ;
 sub data {
   _unset_sig_warn() ;
   my $this = shift ;
+
   my ( %args ) = @_ ;
   
   my $tree ;
-  
-  if ( $args{tree} ) { $tree = $args{tree} ;}
-  else { $tree = $this->tree ;}
+  if( $args{tree} ) { 
+      $tree = $args{ tree } ;
+  } else { 
+      $tree = $this->tree   ;
+  }
   
   {
     my $addroot ;
@@ -249,6 +254,9 @@ sub _data {
   $stat[1] -= 2 if $stat[1] > 1 ;
   
   my $tag_org = $tag ;
+  
+  print STDERR "$tag_org \n";
+
   $tag = $stat[4] ? $tag : &_check_tag($tag) ;
   if    ($stat[2] == 1) { $tag = "\L$tag\E" ;}
   elsif ($stat[2] == 2) { $tag = "\U$tag\E" ;}
@@ -428,12 +436,12 @@ sub _data {
       
       my $do_val = 1 ;
       if ( $tag_org eq '!--' && ( !ref($value) || ( ref($value) eq 'HASH' && keys %{$value} == 1 && (defined $$value{CONTENT} || defined $$value{content}) ) ) ) {
-        $c++ ;
-        my $ct = $value ;
-        if (ref $value) { $ct = defined $$value{CONTENT} ? $$value{CONTENT} : $$value{content} ;} ;
-        $tags .= $ident . '<!--' . $ct . '-->' ;
-        $v = $ct if $c == 1 ;
-        $do_val = 0 ;
+	  $c++ ;
+	  my $ct = $value ;
+	  if (ref $value) { $ct = defined $$value{CONTENT} ? $$value{CONTENT} : $$value{content} ;} ;
+	  $tags .= $ident . '<!--' . $ct . '-->' ;
+	  $v = $ct if $c == 1 ;
+	  $do_val = 0 ;
       }
       elsif (ref($value)) {
         if (ref($value) eq 'HASH') {

@@ -34,7 +34,7 @@ sub _generate_nulltree {
     my @tree = @{$saver->{keyprev}} ;
     if (!@tree) { return ;}
     
-    if ( $I > 0 ) { push(@tree , "[$I]") ;}
+    if ( $I and $I > 0 ) { push(@tree , "[$I]") ;}
     
     my $tree = $saver->{tree} ;
     

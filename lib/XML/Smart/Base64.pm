@@ -2,32 +2,111 @@
 ## Name:        Base64.pm
 ## Purpose:     XML::Smart::Base64
 ## Author:      Graciliano M. P.
-## Modified by: Harish Madabushi
+## Modified by:
 ## Created:     25/5/2003
 ## RCS-ID:      
 ## Copyright:   (c) 2003 Graciliano M. P.
 ## Licence:     This program is free software; you can redistribute it and/or
 ##              modify it under the same terms as Perl itself
+
+
 #############################################################################
 
-package XML::Smart::Base64 ;
 
-use strict                 ;
-use warnings               ;
+## 
+## Modified by Harish to fix bugs in xml creation and to errors more readable.
+##     Tue Nov  1 21:18:43 IST 2011
 
-our $VERSION = '1.1'       ;
+
+############################################################################
+
+
+package XML::Smart::Base64                                     ;
+
+use strict                                                     ;
+use warnings                                                   ;
+
+use Carp                                                       ;
+
+use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
+
+our $VERSION = '1.3'       ;
+
 
 my ($BASE64_PM) ;
 eval("use MIME::Base64 ()") ;
 if ( defined &MIME::Base64::encode_base64 ) { $BASE64_PM = 1 ;}
+
+
+
 
 #################
 # ENCODE_BASE64 #
 #################
 
 sub encode_base64 {
-  if ( $BASE64_PM ) { return &MIME::Base64::encode_base64($_[0]) ;}
-  else { return &_encode_base64_pure_perl($_[0]) ;}
+
+    my $value   = $_[0] ;
+	
+    if( $BASE64_PM ) { 
+	
+	eval { 
+	    _unset_sig_warn() ;
+	    my $encoded = MIME::Base64::encode_base64( $value  ) ;
+	    my $decoded = MIME::Base64::decode_base64( $encoded) ;
+	    _reset_sig_warn() ;
+	    
+	    my $tmp_decoded =  $decoded ;
+	    $tmp_decoded    =~ s/\n//g  ;
+	    
+	    my $tmp_value   =  $value   ;
+	    $tmp_value      =~ s/\n//g  ;
+	    
+	    return $encoded if( $tmp_decoded eq $tmp_value ) ;
+	}; 
+
+    }
+
+    { 
+	my $encoded     ;
+	my $decoded     ;
+	my $tmp_value   ;
+	my $tmp_decoded ;
+	eval {
+	    _unset_sig_warn() ;
+	    $encoded = _encode_base64_pure_perl( $value   ) ;
+	    $decoded = _decode_base64_pure_perl( $encoded ) ;
+	    _reset_sig_warn() ;
+	
+	    $tmp_decoded    =  $decoded ;
+	    $tmp_decoded    =~ s/\n//g  ;
+	    
+	    $tmp_value      =  $value   ;
+	    $tmp_value      =~ s/\n//g  ;
+	} ; unless( $@ ) {
+	    return $encoded if( $tmp_decoded eq $tmp_value ) ;
+	}
+    }
+    
+    { 
+	_unset_sig_warn() ;
+	my $encoded = _encode_ord_special( $value   ) ;
+	my $decoded = _decode_ord_special( $encoded ) ;
+	_reset_sig_warn() ;
+	
+	my $tmp_decoded =  $decoded ;
+	$tmp_decoded    =~ s/\n//g  ;
+	
+	my $tmp_value   =  $value   ;
+	$tmp_value      =~ s/\n//g  ;
+	
+	return $encoded if( $tmp_decoded eq $tmp_value ) ;
+    }
+    
+
+
+    croak( "Error Encoding\n" ) ;
+
 }
 
 ############################
@@ -35,23 +114,65 @@ sub encode_base64 {
 ############################
 
 sub _encode_base64_pure_perl {
-  my $res = "";
-  my $eol = $_[1];
-  $eol = "\n" unless defined $eol;
-  pos($_[0]) = 0;                          # ensure start at the beginning
-  while ($_[0] =~ /(.{1,45})/gs) {
-	$res .= substr(pack('u', $1), 1);
+    my $res = "";
+    my $eol = $_[1];
+    $eol = "\n" unless defined $eol;
+    pos($_[0]) = 0;                          # ensure start at the beginning
+    while ($_[0] =~ /(.{1,45})/gs) {
+	my $text = $1 ;
+	$res .= substr( pack('u', $text ), 1 ) ;
 	chop($res);
-  }
-  $res =~ tr|` -_|AA-Za-z0-9+/|;               # `# help emacs
-  # fix padding at the end
-  my $padding = (3 - length($_[0]) % 3) % 3;
-  $res =~ s/.{$padding}$/'=' x $padding/e if $padding;
-  # break encoded string into lines of no more than 76 characters each
-  if (length $eol) {
+    }
+    $res =~ tr|` -_|AA-Za-z0-9+/|;               # `# help emacs
+    # fix padding at the end
+    my $padding = (3 - length($_[0]) % 3) % 3;
+    $res =~ s/.{$padding}$/'=' x $padding/e if $padding;
+    # break encoded string into lines of no more than 76 characters each
+    if (length $eol) {
 	$res =~ s/(.{1,76})/$1$eol/g;
-  }
-  $res;
+    }
+    $res;
+}
+
+
+
+############################
+#   _ENCODE_ORD_SPECIAL    #
+############################
+
+
+sub _encode_ord_special { 
+
+    my $value = shift ;
+
+    my @chars = split( //, $value ) ;
+    my @ords  ;
+    foreach my $char ( @chars ) { 
+	push @ords, ord( $char ) ;
+    }
+
+    return join( "|", @ords ) ;
+
+}
+
+
+############################
+#   _DECODE_ORD_SPECIAL    #
+############################
+
+
+sub _decode_ord_special {
+
+    my $value = shift ;
+
+    my @ords = split( /\|/, $value ) ;
+    my @chars  ;
+    foreach my $ord ( @ords ) { 
+	push @chars, chr( $ord ) ;
+    }
+
+    return join( "", @chars ) ;
+
 }
 
 #################
@@ -59,8 +180,66 @@ sub _encode_base64_pure_perl {
 #################
 
 sub decode_base64 {
-  if ( $BASE64_PM ) { return &MIME::Base64::decode_base64($_[0]) ;}
-  else { return &_decode_base64_pure_perl($_[0]) ;}
+    
+    my $value = $_[0] ;
+
+    if( $BASE64_PM ) { 
+
+	eval { 
+	    _unset_sig_warn() ;
+	    my $decoded = MIME::Base64::decode_base64( $value   ) ;
+	    my $encoded = MIME::Base64::encode_base64( $decoded ) ;
+	    _reset_sig_warn() ;
+	    
+	    my $tmp_value   = $value   ;
+	    $tmp_value      =~ s/\n//g ;
+	    
+	    my $tmp_encoded = $encoded ;
+	    $tmp_encoded    =~ s/\n//g ;
+	    
+	    return $decoded if( $tmp_encoded eq $tmp_value  ) ;
+	}; 
+
+    }
+
+    {
+
+	my $decoded     ;
+	my $encoded     ;
+	my $tmp_value   ;
+	my $tmp_encoded ;
+	eval { 
+	    $decoded = _decode_base64_pure_perl( $value     ) ;
+	    $encoded = _encode_base64_pure_perl( $decoded   ) ;
+	
+	    $tmp_value      = $value   ;
+	    $tmp_value      =~ s/\n//g ;
+	    
+	    $tmp_encoded    = $encoded ;
+	    $tmp_encoded    =~ s/\n//g ;
+	} ; unless( $@ ) { 
+	    return $decoded if( $tmp_encoded eq $tmp_value  ) ;
+	}
+	
+    }
+
+    {
+
+	my $decoded = _decode_ord_special( $value     ) ;
+	my $encoded = _encode_ord_special( $decoded   ) ;
+	
+	my $tmp_value   = $value   ;
+	$tmp_value      =~ s/\n//g ;
+	
+	my $tmp_encoded = $encoded ;
+	$tmp_encoded    =~ s/\n//g ;
+	
+	return $decoded if( $tmp_encoded eq $tmp_value  ) ;
+	
+    }
+
+    croak "Error Decoding\n"  ;
+
 }
 
 
@@ -92,5 +271,4 @@ sub _decode_base64_pure_perl {
 #######
 
 1;
-
 

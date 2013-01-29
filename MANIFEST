@@ -3,6 +3,7 @@ Changes
 MANIFEST
 Makefile.PL
 t/pod.t
+t/hex.t
 t/00-load.t
 t/manifest.t
 t/copy_fail.t

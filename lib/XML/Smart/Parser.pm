@@ -41,13 +41,11 @@ use vars qw($VERSION)                                          ;
 
 use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
-$VERSION = 1.3 ;
+$VERSION = 1.31 ;
 
 my(@parsed , @stack, $level) ;
 
 &compile();
-
-use Data::Dump qw( dump ) ;
 
 sub new { 
 

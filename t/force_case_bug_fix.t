@@ -11,7 +11,7 @@ use Data::Dump qw( dump );
 my @xml = <DATA>;
 my $xml = join( '', @xml ) ;
 
-subtest 'Raw Binary Data' => sub {
+subtest 'Force case' => sub {
 
     my $XML1 = new XML::Smart ( $xml,
 				lowarg => 1,

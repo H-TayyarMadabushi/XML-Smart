@@ -34,9 +34,6 @@ my %PARSERS = (
 
 use vars qw($NO_XML_PARSER);
 
-use Data::Dump qw( dump ) ;
-
-
 
 ###################
 # LOAD_XML_PARSER #

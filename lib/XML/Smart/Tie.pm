@@ -19,6 +19,9 @@ use warnings                                                   ;
 
 use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
+use vars qw($VERSION)                                          ;
+
+$VERSION = 0.01 ;
 ######################
 # _GENERATE_NULLTREE #
 ######################

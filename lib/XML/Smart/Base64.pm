@@ -164,7 +164,6 @@ sub _encode_ord_special {
 sub _decode_ord_special {
 
     my $value = shift ;
-
     my @ords = split( /\|/, $value ) ;
     my @chars  ;
     foreach my $ord ( @ords ) { 
@@ -238,7 +237,7 @@ sub decode_base64 {
 	
     }
 
-    croak "Error Decoding\n"  ;
+    croak "Error Decoding $value\n"  ;
 
 }
 

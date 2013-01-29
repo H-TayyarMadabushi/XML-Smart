@@ -22,7 +22,7 @@ use warnings                                                   ;
 use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 our ($VERSION , @ISA) ;
-$VERSION = '0.03' ;
+$VERSION = '0.05' ;
 
 ########
 # VARS #

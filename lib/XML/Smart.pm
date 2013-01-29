@@ -35,9 +35,6 @@ use XML::Smart::Tree                                           ;
 our ($VERSION) ;
 $VERSION = '1.73' ;
 
-use Data::Dump qw( dump ) ;
-
-
 ###############
 # AUTOLOADERS #
 ###############
@@ -1176,8 +1173,8 @@ sub DESTROY {
   my $this = shift ;
   
   if( $$this->{ DEV_DEBUG } ) {
-      require Devel::Cycle;
-      my $circ_ref = 0 ;
+      require Devel::Cycle ;
+      my $circ_ref = 0     ;
       my $tmp = Devel::Cycle::find_cycle(
 	  $this, 
 	  sub {
@@ -1723,7 +1720,7 @@ Return the data of the XML object (rebuilding it).
 
 B<Options:>
 
-=over 10
+=over 11
 
 =item nodtd
 
@@ -1771,6 +1768,14 @@ Do not add the meta generator tag: <?meta generator="XML::Smart" ?>
 =item meta
 
 Set the meta tags of the XML document.
+
+=item decode
+
+As of VERSION 1.73 there are three different base64 encodings that are used. They are picked
+based on which of them support the data provided. If you want to retrieve data using the 'data' function
+the resultant xml will have dt:dt="binary.based" contained within it. To retrieve the decoded data
+use: $XML->data( decode => 1 ) 
+
 
 Examples:
 
@@ -2227,10 +2232,10 @@ CDATA will be parsed as any other content, since CDATA is only a block that
 won't be parsed.
 
 B<When creating XML data>, like at $XML->data(), the binary format and CDATA are
-detected using this roles:
+detected using these rules:
 
   BINARY:
-  - If have characters that can't be in XML.
+  - If your data has characters that can't be in XML.
 
   * Characters accepted:
     
@@ -2261,14 +2266,20 @@ So, this will be a CDATA content:
     line2
   ]]></code>
 
-If a binary content is detected, it will be converted to B<base64> and a B<dt:dt>
+If binary content is detected, it will be converted to B<base64> and a B<dt:dt>
 attribute added in the tag to tell the format.
 
   <code dt:dt="binary.base64">f1NPTUUgQklOQVJZIERBVEE=</code>
 
+
+B<NOTE:> As of VERSION 1.73 there are three different base64 encodings that are used. They are picked
+based on which of them support the data provided. If you want to retrieve data using the 'data' function
+the resultant xml will have dt:dt="binary.based" contained within it. To retrieve the decoded data
+use: $XML->data( decode => 1 ) 
+
 =head1 UNICODE and ASCII-extended (ISO-8859-1)
 
-I<XML::Smart> support only this 2 encode types, Unicode (UTF-8) and ASCII-extended (ISO-8859-1),
+I<XML::Smart> support only thse 2 encode types, Unicode (UTF-8) and ASCII-extended (ISO-8859-1),
 and must be enough. (B<Note that UTF-8 is only supported on Perl-5.8+>).
 
 When creating XML data, if any UTF-8 character is detected the I<encoding> attribute

@@ -7,6 +7,7 @@ use Test::More            ;
 
 use XML::Smart            ;
 
+use open ':encoding(utf8)';
 
 our $directory = 'data_for_tests';
 
@@ -20,8 +21,8 @@ while (my $file = readdir( $_data_dir ) ) {
     next if( $file =~ /^bug/ ) ;
 
     subtest "Testing inclusion of data into xml $file" => sub {
-	_test_data_from( $file ) ;
-	done_testing()           ;
+    	_test_data_from( $file ) ;
+    	done_testing()           ;
     };
 
     subtest "Testing embed of data into xml $file"     => sub {
@@ -49,9 +50,8 @@ sub _test_embed_from {
     my $in_data = join( "", @in_data )  ;
     close( $_infile )                          ;
 
-    my $xml_input = '<?xml version="1.0" encoding="utf-8"?>
+    my $xml_input = '
 <subject_list>
-
         <subject>' . $in_data . '
 </subject>
 </subject_list>
@@ -59,8 +59,17 @@ sub _test_embed_from {
 
     my $xml_obj = new XML::Smart( $xml_input ) ;
 
-    my $data = $xml_obj->data() ;
+    my $data = $xml_obj->data(
+	'decode'    => 1 ,
+	'noheader'  => 1 ,
+	) ;
 
+    $data =~ s/\n//gs;
+    $data =~ s/\s+/ /gs;
+
+    $xml_input =~ s/\n//gs;
+    $xml_input =~ s/\s+/ /gs;
+    
     cmp_ok( $data, 'eq', $xml_input ) ;
 
 }

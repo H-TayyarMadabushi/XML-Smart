@@ -46,7 +46,10 @@ sub load_XPath {
     warn("Error loading module XML::XPath! Can't use XPath with XML::Smart! Please install XML::XPath.");
     $load_XPath = undef ;
   }
-  else { $load_XPath = 1 ;}
+  else { 
+      $load_XPath           = 1 ;
+      $XML::XPath::SafeMode = 1 ;
+  }
 
   return $load_XPath ;
 }
@@ -67,8 +70,10 @@ sub xpath {
   if ( $$this->{XPATH} ) { $xpath = ${$$this->{XPATH}} ;}
   
   if (!$xpath){
-    $xpath = XML::XPath->new(xml => $this->data(nospace => 1 , noheader => 1)) ;  
-    $$this->{XPATH} = \$xpath ;
+      $xpath = XML::XPath->new(
+	  xml => $this->data(nospace => 1 , noheader => 1)
+	  ) ;  
+      $$this->{XPATH} = \$xpath ;
   }
   
   if ( !@_ ) { return $xpath ;}

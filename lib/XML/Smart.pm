@@ -116,7 +116,6 @@ sub new {
     }
     
     $$this->{point} = $$this->{tree} ;
-    
     bless($this,$class) ;
 
     return $this ;
@@ -1178,22 +1177,87 @@ sub DESTROY {
   
   if( $$this->{ DEV_DEBUG } ) {
       require Devel::Cycle;
-      my $tmp = Devel::Cycle::find_cycle($this, sub {
-	  my $path = shift;
-	  foreach (@$path) {
-	      my ($type,$index,$ref,$value) = @$_;
-	      print STDERR "Circular reference found while destroying object of type " .
-		  ref($this) . "! reftype: $type\n";
+      my $circ_ref = 0 ;
+      my $tmp = Devel::Cycle::find_cycle(
+	  $this, 
+	  sub {
+	      my $path = shift;
+	      foreach (@$path) {
+		  my ($type,$index,$ref,$value) = @$_;
+		  $circ_ref = 1 ;
+		  
+	      }
 	      
-	      print STDERR "\n" ;
-	      
-	      exit() ;
-	      
-	  }
-	  
-					 });
-  }
+	  });
+
+      if( $circ_ref ) { 
+	  $this->ANNIHILATE() ;
+	  my $tmp = Devel::Cycle::find_cycle( 
+	      $this, 
+	      sub {
+		  print STDERR "Circular reference found while destroying object - AFTER ANNIHILATE\n" ;
+	      });
+      }
+  } 
+
   $$this->clean if( $this && $$this ) ; # In case object was messed with ( bug 62091 ) 
+
+
+}
+
+sub ANNIHILATE {
+
+  my $this = shift ;
+  my $base = shift ;
+  
+  if( ref $$this->{ point } eq 'HASH' ) { 
+      my %clean ;
+      $$this->{ point } = \%clean ;
+  } else { 
+      $this->{ point }->ANNIHILATE( ) ;
+  }
+
+  if( ref $$this->{ tree } eq 'HASH' ) { 
+      my %clean ;
+      $$this->{ tree } = \%clean ;
+  } else { 
+      $this->{ tree }->ANNIHILATE( ) ;
+  }
+
+
+  if( ref $$this->{ back } eq 'HASH' ) { 
+      my %clean ;
+      $$this->{ back } = \%clean ;
+  } else { 
+      $this->{ back }->ANNIHILATE( ) ;
+  }
+
+  if( $$this->{ XPATH } ) { # and ( ref $$this->{ XPATH } eq 'XML::XPath' ) ) { 
+      my $xpath = $$this->{ XPATH } ;
+      $$xpath->cleanup() ;
+      my $context = $$xpath->{ _context } ;
+      my $context_ref = ref $context ;
+      if( $context_ref =~ /XML\:\:XPath\:\:Node\:\:/ ) {
+	  _xml_xpath_clean( $context ) ;
+      } 
+  }
+
+  $$this->DESTROY();
+
+  return 1 ;
+
+}
+
+
+sub _xml_xpath_clean { 
+
+    my $path = shift ;
+
+    $path->dispose() ;
+    # Data::Structure::Util::unbless( $path ) ;
+    
+    return ;
+
 }
 
 ###################
@@ -1932,6 +1996,12 @@ Return a XML::XPath object, based in the XML::Smart pointer in the tree.
 I<** Need XML::XPath installed, but only load when is needed.>
 
 
+=head2 ANNIHILATE
+
+XML::Smart uses XML::XPath that, for perfomance reasons, leaks memory. The ensure that this memory is freed you can 
+explicitly call ANNIHILATE before the XML::Smart object goes out of scope. 
+
+
 =head1 ACCESS
 
 To access the data you use the object in a way similar to HASH and ARRAY:
@@ -2415,8 +2485,11 @@ key. So this actually returns another object, pointhing (inside it) to the key:
 =head1 TODO
 
   * Finish XPath implementation.
-  * DTD.
+  * DTD - Handle <!DOCTYPE> gracefully.
   * Implement a better way to declare meta tags.
+  * Add 0x81, 0x8d, 0x8f, 0x90, 0xa0 ( multi byte characters to the list of accepted binary characters )
+
+
 
 =head1 SEE ALSO
 

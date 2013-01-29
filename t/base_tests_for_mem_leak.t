@@ -45,6 +45,7 @@ my $DATA = q`<?xml version="1.0" encoding="iso-8859-1"?>
   </html>
   ` );
   
+
   my $data = $XML->data( noheader => 1 ) ;
   $data =~ s/\s+/ /gs ;
   
@@ -77,6 +78,7 @@ content1
 content2
 </root>
   ` , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   my $data = $XML->data(noheader => 1) ;
   
@@ -155,6 +157,7 @@ content2
   <phone>bbb</phone>
 </root>
 `) ;
+  $$xml->{ DEV_DEBUG } = 1 ;
 
   $xml = $xml->{root} ;
 
@@ -190,6 +193,8 @@ TEXT1 & more
 </elsif.2>
 </foo>  
   `,'html') ;
+
+  $$xml->{ DEV_DEBUG } = 1 ;
   
   my $data = $xml->data(noident=>1 , noheader => 1 , wild=>1) ;
   
@@ -210,6 +215,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new('<a>text1<b>foo</b><c>bar</c>text2</a>' , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
 
   my $data = $XML->data(noheader => 1) ;
   $data =~ s/\s//g ;
@@ -221,6 +227,8 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new('<root><foo bar="x"/></root>' , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
+
   my $data = $XML->data(noheader => 1) ;
   
   $data =~ s/\s//gs ;
@@ -231,6 +239,7 @@ TEXT1 &amp; more
 {
   
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   my $data = $XML->data(nometagen => 1) ;
   $data =~ s/\s//gs ;
@@ -245,6 +254,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new('<root><foo bar="x"/></root>' , 'XML::Smart::HTMLParser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   my $data = $XML->data(noheader => 1) ;
   $data =~ s/\s//gs ;
   ok($data,'<root><foobar="x"/></root>') ;
@@ -259,6 +269,7 @@ TEXT1 &amp; more
   </body>
   </html>
   ` , 'HTML') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   $data = $XML->data(noheader => 1 , nospace => 1 ) ;
   ok($data,q`<html><title>TITLE</title><body bgcolor="#000000"><foo1 baz='y1=name\" bar1=x1 &gt; end' w="q"/><foo2 bar2="" arg0="" x="y">FOO2-DATA</foo2><foo3 bar3="x3"/><foo4 url="http://www.com/dir/file.x?query=value&amp;x=y"/></body></html>`) ;
@@ -275,6 +286,7 @@ TEXT1 &amp; more
     <foo2 bar2=x2>
   </body></html>
   ` , 'HTML') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   $data = $XML->data(noheader => 1 , nospace => 1) ;
   $data =~ s/\s//gs ;
@@ -295,6 +307,7 @@ TEXT1 &amp; more
     </foo>
   </root>
   ` , 'XML::Smart::HTMLParser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   my $data = $XML->data(noheader => 1 , wild => 1) ;
   
@@ -314,10 +327,14 @@ TEXT1 &amp; more
 #########################
 {
   my $XML0 = XML::Smart->new(q`<root><foo1 name='x'/></root>` , 'XML::Smart::Parser') ;
+  $$XML0->{ DEV_DEBUG } = 1 ;
+
   my $XML1 = XML::Smart->new(q`<root><foo2 name='y'/></root>` , 'XML::Smart::Parser') ;
+  $$XML1->{ DEV_DEBUG } = 1 ;
   
   my $XML = XML::Smart->new() ;
-  
+  $$XML->{ DEV_DEBUG } = 1 ;
+
   $XML->{sub}{sub2} = $XML0->tree ;
   push(@{$XML->{sub}{sub2}} , $XML1->tree ) ;
   
@@ -330,6 +347,7 @@ TEXT1 &amp; more
 #########################
 {
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   $XML = $XML->{hosts} ;
   
   my $addr = $XML->{server}[0]{address} ;
@@ -358,6 +376,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   $XML = $XML->{hosts} ;
   
   my $addr = $XML->{'server'}('type','eq','suse'){'address'} ;
@@ -383,6 +402,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   $XML = $XML->{hosts} ;
 
   my $newsrv = {
@@ -421,7 +441,8 @@ TEXT1 &amp; more
     <jack name="Jack Z" email="jack@mail.com"/>
   </users>
   ` , 'XML::Smart::Parser') ;
-  
+  $$XML->{ DEV_DEBUG } = 1 ;
+
   my @users = $XML->{users}('email','=~','^jo') ;
   
   ok( $users[0]->{name} , 'Joe X') ;
@@ -431,6 +452,7 @@ TEXT1 &amp; more
 #########################
 {
   my $XML = XML::Smart->new() ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   $XML->{server} = {
   os => 'Linux' ,
@@ -452,6 +474,8 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new('<foo port="80">ct<i>a</i><i>b</i></foo>' , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
+
   my $data = $XML->data(noheader => 1) ;
   $data =~ s/\s//gs ;
   
@@ -464,6 +488,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   $XML->{'hosts'}{'server'}('type','eq','conectiva'){'address'}[1] = '' ;
   
@@ -486,6 +511,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   $XML->{data} = 'aaa' ;
   $XML->{var } = 10    ;
@@ -503,6 +529,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   $XML->{hosts}{server} = {
   os => 'lx'  ,
@@ -535,6 +562,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
                           
   $XML->{hosts}[1]{server}[0] = {
   os => 'LX'  ,
@@ -554,6 +582,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
                           
   my $srv = {
   os => 'lx'  ,
@@ -579,6 +608,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   $XML->{hosts}{server} = [
   { os => 'lx' , type => 'a' , ver => '1' ,} ,
@@ -606,6 +636,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
 
   my @types = $XML->{hosts}{server}('[@]','type') ;
   ok("@types" , 'redhat suse conectiva freebsd') ;
@@ -618,6 +649,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
 
   my @srvs = $XML->{hosts}{server}('os','eq','linux') ;
   
@@ -639,11 +671,13 @@ TEXT1 &amp; more
   my $data = qq`<?xml version="1.0" encoding="iso-8859-1"?><code>$wild</code>`;
 
   my $XML = XML::Smart->new($data , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
 
   ok($XML->{code} , $wild) ;
   $data = $XML->data() ;
   
   $XML = XML::Smart->new($data , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
 
   ok($XML->{code} , $wild) ;
   
@@ -655,6 +689,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   my $addr1 = $XML->{hosts}{server}{address} ;
   
@@ -674,6 +709,7 @@ TEXT1 &amp; more
   `;
 
   my $XML = XML::Smart->new($data , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   ok($XML->{root}{foo} , q` My Company & Name + x >> plus " + '...`) ;
   
@@ -691,6 +727,7 @@ TEXT1 &amp; more
     </foo>
   </root>
   ` , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   my @nodes = $XML->{root}{foo}->nodes ;
   
@@ -718,6 +755,7 @@ TEXT1 &amp; more
   `;
 
   my $XML = XML::Smart->new($data , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   ok( $XML->{root}{item}{data} , q`some CDATA code <non> <parsed> <tag> end`) ;
   
@@ -726,6 +764,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new() ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   $XML->{menu}{option}[0] = {
   name => "Help" ,
@@ -746,6 +785,7 @@ TEXT1 &amp; more
 {
   
   my $XML = XML::Smart->new() ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   $XML->{menu}{arg1} = 123 ;
   $XML->{menu}{arg2} = 456 ;
@@ -764,6 +804,7 @@ TEXT1 &amp; more
 {
   
   my $XML = XML::Smart->new() ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   $XML->{menu}{arg1} = [1,2,3] ;
   $XML->{menu}{arg2} = 4 ;
@@ -782,6 +823,7 @@ TEXT1 &amp; more
 {
   
   my $XML = XML::Smart->new() ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   $XML->{menu}{arg2} = 456 ;
   $XML->{menu}{arg1} = 123 ;
@@ -812,6 +854,7 @@ TEXT1 &amp; more
 
 
   my $XML = XML::Smart->new() ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   $XML->{root}{foo} = "bla bla bla";
 
   $XML->{root}{foo}->set_node(1) ;
@@ -873,6 +916,7 @@ TEXT1 &amp; more
 {
 
   my $XML = new XML::Smart ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   $XML->{root}{foo} = "bla bla bla <tag> bla bla";
 
   my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
@@ -893,6 +937,7 @@ TEXT1 &amp; more
 {
 
   my $XML = new XML::Smart ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   $XML->{root}{foo} = "<h1>test \x03</h1>";
 
   my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
@@ -913,6 +958,7 @@ TEXT1 &amp; more
 {
 
   my $XML = new XML::Smart ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   $XML->{root}{foo} = "simple";
 
   my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
@@ -928,6 +974,7 @@ TEXT1 &amp; more
 {
 
   my $XML = new XML::Smart ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   $XML->{root}{foo} = "<words>foo bar baz</words>";
 
   my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
@@ -947,6 +994,7 @@ TEXT1 &amp; more
     <entry><b>here's</b> a <i>test</i></entry>
   </root>
   `, 'XML::Parser');
+  $$XML->{ DEV_DEBUG } = 1 ;
 
   my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
   ok($data , "<root><entry><b>here's</b> a <i>test</i></entry></root>") ;  
@@ -956,6 +1004,7 @@ TEXT1 &amp; more
 {
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+  $$XML->{ DEV_DEBUG } = 1 ;
   $XML = $XML->{hosts} ;
   
   my $addr = $XML->{'server'}('type','eq','suse'){'address'} ;
@@ -1004,6 +1053,7 @@ TEXT1 &amp; more
     </output>
   </root>
   `,'smart');
+  $$XML->{ DEV_DEBUG } = 1 ;
   
   $XML = $XML->cut_root ;
   
@@ -1050,6 +1100,7 @@ TEXT1 &amp; more
   <file>file 1</file>
 </doc>
   `);
+  $$xml->{ DEV_DEBUG } = 1 ;
 
   $xml->{doc}{port}[0] = 0;
   $xml->{doc}{port}[1] = 1;
@@ -1070,6 +1121,7 @@ TEXT1 &amp; more
   eval(q`use XML::XPath`) ;
   if ( !$@ ) {
     my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+    $$XML->{ DEV_DEBUG } = 1 ;
     
     my $xp1 = $XML->XPath ;
     my $xp2 = $XML->XPath ;
@@ -1154,6 +1206,7 @@ TEXT1 &amp; more
 {
 
   my $xml = XML::Smart->new()->{cds} ;
+  $$xml->{ DEV_DEBUG } = 1 ;
   
   $xml->{album}[0] = {
   title => 'foo' ,
@@ -1228,6 +1281,7 @@ TEXT1 &amp; more
 {
   
   my $xml = XML::Smart->new;
+  $$xml->{ DEV_DEBUG } = 1 ;
   $xml->{customer}{phone} = "555-1234";
   $xml->{customer}{phone}{type} = "home";
   
@@ -1244,42 +1298,6 @@ TEXT1 &amp; more
   ok( $xml->data(noheader=>1 , nospace=>1 , nodtd=>1) , q`<customer><phone type="home">555-1234</phone></customer>` );
 
 }
-#########################
-{
-
-
-    eval(q`use LWP::UserAgent`) ;
-    if ( !$@ ) {
-
-	if( $ENV{ URL_TESTS } ) { 
-  
-	    my $url = 'http://www.perlmonks.org/index.pl?node_id=16046' ;
-	    
-	    print STDERR "\nGetting URL... " ;
-		
-	    my $XML = XML::Smart->new($url , 'XML::Smart::Parser') ;
-		
-	    print STDERR "Test: " ;
-	    
-	    if ( $XML->{XPINFO}{INFO}{sitename} eq 'PerlMonks' ) { 
-		print STDERR "OK\n" ;
-	    } else {
-		print STDERR "ERROR!\n" ;
-		print STDERR "-----------------------------------------------\n" ;
-		print STDERR "The XML of the URL:\n\n" ;
-		print STDERR $XML->data ;
-		print STDERR "-----------------------------------------------\n" ;
-	    }
-	} else { 
-		print STDERR "Skipping URL test, Enable by setting ENV variable URL_TESTS \n" ;
-	}
-    } else { 
-	print "LWP::UserAgent not found - Skipping URL test!\n" ;
-    }
-
-    
-} 
-
 #########################
 
 1 ;

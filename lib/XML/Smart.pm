@@ -31,6 +31,7 @@ use XML::Smart::Tie                                            ;
 use XML::Smart::Tree                                           ;
 
 
+
 our ($VERSION) ;
 $VERSION = '1.73' ;
 
@@ -40,6 +41,8 @@ use Data::Dump qw( dump ) ;
 ###############
 # AUTOLOADERS #
 ###############
+
+## Lead to mem leak? ##
 
 sub data {
     require XML::Smart::Data ;
@@ -1172,6 +1175,24 @@ sub data_pointer {
 
 sub DESTROY {
   my $this = shift ;
+  
+  if( $$this->{ DEV_DEBUG } ) {
+      require Devel::Cycle;
+      my $tmp = Devel::Cycle::find_cycle($this, sub {
+	  my $path = shift;
+	  foreach (@$path) {
+	      my ($type,$index,$ref,$value) = @$_;
+	      print STDERR "Circular reference found while destroying object of type " .
+		  ref($this) . "! reftype: $type\n";
+	      
+	      print STDERR "\n" ;
+	      
+	      exit() ;
+	      
+	  }
+	  
+					 });
+  }
   $$this->clean if( $this && $$this ) ; # In case object was messed with ( bug 62091 ) 
 }
 

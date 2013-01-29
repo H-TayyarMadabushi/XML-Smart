@@ -10,6 +10,9 @@
 ##              modify it under the same terms as Perl itself
 #############################################################################
 
+
+### MAINTAINER NOTE: Contains MEMLeak #### 
+
 package XML::Smart::XPath                                      ;
 
 use 5.006                                                      ;
@@ -22,7 +25,7 @@ require Exporter                                               ;
 use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 our ($VERSION , @ISA) ;
-$VERSION = '0.03' ;
+$VERSION = '0.05' ;
 
 @ISA = qw(Exporter) ;
 
@@ -36,6 +39,7 @@ my $load_XPath ;
 ##############
 
 sub load_XPath {
+
   return $load_XPath if $load_XPath ;
   eval(q`use XML::XPath ;`);
   if ($@) {
@@ -43,6 +47,7 @@ sub load_XPath {
     $load_XPath = undef ;
   }
   else { $load_XPath = 1 ;}
+
   return $load_XPath ;
 }
 

@@ -93,7 +93,7 @@ sub parse {
     if ($cont =~ /\S/s) { push(@parsed , 'Char' , $cont) ;}
     
     if ($args[0] =~ /^\/(.*)/) { push(@parsed , 'End' , $1) ;}
-    elsif (@args[-1] =~ /^\/$/) {
+    elsif ($args[-1] =~ /^\/$/) {
       pop @args ;
       push(@parsed , 'StartEnd' , [@args]) ;
     }
@@ -121,7 +121,7 @@ sub parse {
           }
           elsif ($parsed[$i+2] ne 'Char') { $parsed[$i] = 'StartEnd' ;}
           else {
-            push( @{ $open{@close[-1]} }  , 'End' , $tag) ;
+	      push( @{ $open{$close[-1]} }  , 'End' , $tag) ;
           }
         }
         else {

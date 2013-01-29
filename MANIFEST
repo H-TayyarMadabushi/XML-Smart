@@ -4,6 +4,7 @@ MANIFEST
 Makefile.PL
 t/pod.t
 t/00-load.t
+t/mem_leak.t
 t/manifest.t
 t/copy_fail.t
 t/base_tests.t

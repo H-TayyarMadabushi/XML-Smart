@@ -47,6 +47,8 @@ my(@parsed , @stack, $level) ;
 
 &compile();
 
+use Data::Dump qw( dump ) ;
+
 sub new { 
 
     _unset_sig_warn() ;
@@ -127,9 +129,10 @@ sub compile {
 
 sub parse {
     my $this = shift ;
+
     
     @parsed = () ;
-    
+
     init();
     parse_re($_[0]);
     final();

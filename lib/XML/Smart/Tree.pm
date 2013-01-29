@@ -24,8 +24,8 @@ our ($VERSION) ;
 $VERSION = '1.31' ;
 
 my %PARSERS = (
-    XML_Parser => 0 ,
-    XML_Smart_Parser => 0 ,
+    XML_Parser           => 0 ,
+    XML_Smart_Parser     => 0 ,
     XML_Smart_HTMLParser => 0 ,
     ) ;
 
@@ -206,7 +206,7 @@ sub parse {
   End   => \&_End ,
   Final => \&_Final ,
   ) ;
-  
+
   my $tree ;
   eval { 
       $tree = $xml->parse($data);

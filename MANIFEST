@@ -10,6 +10,7 @@ t/base_tests.t
 t/boilerplate.t
 t/pod-coverage.t
 t/obj_copy_meta.t
+t/subtree_assign.t
 t/force_case_bug_fix.t
 t/base_tests_multi_obj.t
 t/base_tests_for_objcopy.t

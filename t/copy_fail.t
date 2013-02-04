@@ -7,11 +7,8 @@ use Test::More              ;
 use XML::Smart              ;  
 
 
-use Data::Dump qw( dump ) ;
-
-
-my @xml = <DATA>;
-my $xml = join( '', @xml ) ;
+my @xml = <DATA>            ;
+my $xml = join( '', @xml )  ;
 
 subtest 'Copy' => sub {
 

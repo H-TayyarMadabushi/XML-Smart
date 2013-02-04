@@ -9,8 +9,6 @@ BEGIN { plan tests => 163 } ;
 
 use XML::Smart              ;
 
-use Data::Dump qw( dump ) ;
-
 
 my $DATA = q`<?xml version="1.0" encoding="iso-8859-1"?>
 <hosts>

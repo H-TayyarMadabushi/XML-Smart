@@ -21,7 +21,7 @@ use XML::Smart::Entity qw(_parse_basic_entity)                 ;
 use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 our ($VERSION) ;
-$VERSION = '1.31' ;
+$VERSION = '1.32' ;
 
 my %PARSERS = (
     XML_Parser           => 0 ,
@@ -153,11 +153,14 @@ sub parse {
     if (ref($_[0]) eq 'GLOB') { $fh = $_[0] ;}
     elsif ($_[0] =~ /^http:\/\/\w+[^\r\n]+$/s) { $data = &get_url($_[0]) ;}
     elsif ($_[0] =~ /<.*?>/s) { $data = $_[0] ;}
-    else { open ($fh,$_[0]) ; binmode($fh) ; $open = 1 ;}
+    else { 
+	open ($fh,$_[0]) or croak( $! ); binmode($fh) ; $open = 1 ;
+    }
     
     if ($fh) {
-      1 while( read($fh, $data , 1024*8 , length($data) ) ) ;
-      close($fh) if $open ;
+	no warnings ;
+	1 while( read($fh, $data , 1024*8 , length($data) ) ) ;
+	close($fh) if $open ;
     }
   }
   

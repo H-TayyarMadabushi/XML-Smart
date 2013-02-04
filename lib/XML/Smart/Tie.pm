@@ -21,12 +21,15 @@ use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 use vars qw($VERSION)                                          ;
 
-$VERSION = 0.01 ;
+$VERSION = 0.03 ;
 ######################
 # _GENERATE_NULLTREE #
 ######################
 
 sub _generate_nulltree {
+
+    no warnings ;
+
     my $saver = shift ;
     my ( $K , $I ) = @_ ;
 
@@ -266,6 +269,7 @@ sub STORE {
 }
 
 sub FETCHSIZE {
+    no warnings ;
     my $this = shift ;
     my $i = shift ;
     my $key = $this->{saver}->{key} ;

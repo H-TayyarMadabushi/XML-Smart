@@ -7,8 +7,6 @@ use ExtUtils::MakeMaker     ;
 
 use XML::Smart              ;
 
-use Data::Dump qw( dump )   ;
-
 
 
 my $xml_base = new XML::Smart(q`

@@ -1,8 +1,6 @@
 use strict                ;
 use warnings              ;
 
-use Data::Dump qw( dump ) ;
-
 use Test::More            ;
 
 use XML::Smart            ;

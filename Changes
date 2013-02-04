@@ -1,5 +1,12 @@
 Revision history for Perl extension XML::Smart.
 
+1.74  2013-2-04
+    - Fixed POD errors
+    - Removed unnecessary modules from tests.
+    - Removed warnings from Tree and Tie
+    - Removed Binary data from Smart.pm
+    - Added or croak to all file open()s
+
 1.73  2013-1-28
     - Fixed bug 17834 in Tree.pm
     - Fixed object copy bug 34695

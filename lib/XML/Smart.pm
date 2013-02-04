@@ -30,10 +30,137 @@ use vars qw(@ISA)                                              ;
 use XML::Smart::Tie                                            ;
 use XML::Smart::Tree                                           ;
 
+=head1 NAME
+
+XML::Smart - A smart, easy and powerful way to access or create XML from fiels, data and URLs.
+
+=head1 VERSION
+
+Version 1.74
+
+=cut
+
+our $VERSION = '1.74' ;
 
 
-our ($VERSION) ;
-$VERSION = '1.73' ;
+=head1 SYNOPSIS
+
+This module provides an easy way to access/create XML data. It's based on a HASH
+tree created from the XML data, and enables dynamic access to it through the 
+standard Perl syntax for Hash and Array, without necessarily caring about which 
+you are working with. In other words, B<each point in the tree works as a Hash and
+an Array at the same time>!
+
+This module additionally provides special resources such as: search for nodes by 
+attribute, select an attribute value in each multiple node,  change the returned 
+format, and so on.
+
+The module also automatically handles binary data (encoding/decoding to/from base64),
+CDATA (like contents with <tags>) and Unicode. It can be used to create XML files,
+load XML from the Web ( just by using an URL as the file path ) and has an easy
+way to send XML data through sockets - just adding the length of the data in
+the <?xml?> header.
+
+You can use I<XML::Smart> with L<XML::Parser>, or with the 2 standart parsers of
+XML::Smart:
+
+=over 10
+
+=item I<XML::Smart::Parser>
+
+=item I<XML::Smart::HTMLParser>.
+
+=back
+
+I<XML::Smart::HTMLParser> can be used to load/parse wild/bad XML data, or HTML tags.
+
+=head1 Tutorial and F.A.Q.
+
+You can find some extra documents about I<XML::Smart> at:
+
+=over 2
+
+=item L<XML::Smart::Tutorial> - Tutorial and examples for XML::Smart.
+
+=item L<XML::Smart::FAQ>      - Frequently Asked Questions about XML::Smart.
+
+=back
+
+=cut
+
+=head1 USAGE
+
+  ## Create the object and load the file:
+  my $XML = XML::Smart->new('file.xml') ;
+  
+  ## Force the use of the parser 'XML::Smart::Parser'.
+  my $XML = XML::Smart->new('file.xml' , 'XML::Smart::Parser') ;
+  
+  ## Get from the web:
+  my $XML = XML::Smart->new('http://www.perlmonks.org/index.pl?node_id=16046') ;
+
+  ## Cut the root:
+  $XML = $XML->cut_root ;
+
+  ## Or change the root:
+  $XML = $XML->{hosts} ;
+
+  ## Get the address [0] of server [0]:
+  my $srv0_addr0 = $XML->{server}[0]{address}[0] ;
+  ## ...or...
+  my $srv0_addr0 = $XML->{server}{address} ;
+  
+  ## Get the server where the attibute 'type' eq 'suse':
+  my $server = $XML->{server}('type','eq','suse') ;
+  
+  ## Get the address again:
+  my $addr1 = $server->{address}[1] ;
+  ## ...or...
+  my $addr1 = $XML->{server}('type','eq','suse'){address}[1] ;
+  
+  ## Get all the addresses of a server:
+  my @addrs = @{$XML->{server}{address}} ;
+  ## ...or...
+  my @addrs = $XML->{server}{address}('@') ;
+  
+  ## Get a list of types of all the servers:
+  my @types = $XML->{server}('[@]','type') ;
+  
+  ## Add a new server node:
+  my $newsrv = {
+  os      => 'Linux' ,
+  type    => 'Mandrake' ,
+  version => 8.9 ,
+  address => [qw(192.168.3.201 192.168.3.202)]
+  } ;
+  
+  push(@{$XML->{server}} , $newsrv) ;
+
+  ## Get/rebuild the XML data:
+  my $xmldata = $XML->data ;
+  
+  ## Save in some file:
+  $XML->save('newfile.xml') ;
+  
+  ## Send through a socket:
+  print $socket $XML->data(length => 1) ; ## show the 'length' in the XML header to the
+                                          ## socket know the amount of data to read.
+  
+  __DATA__
+  <?xml version="1.0" encoding="iso-8859-1"?>
+  <hosts>
+    <server os="linux" type="redhat" version="8.0">
+      <address>192.168.0.1</address>
+      <address>192.168.0.2</address>
+    </server>
+    <server os="linux" type="suse" version="7.0">
+      <address>192.168.1.10</address>
+      <address>192.168.1.20</address>
+    </server>
+    <server address="192.168.2.100" os="linux" type="conectiva" version="9.0"/>
+  </hosts>
+
+=cut
 
 ###############
 # AUTOLOADERS #
@@ -889,10 +1016,27 @@ sub set_auto {
 ## 1 value
 
 sub _data_type {
-    return 4 if( $_[0] && $_[0] =~ /[^\w\d\s!"#\$\%&'\(\)\*\+,\-\.\/:;<=>\?\@\[\\\]\^\`\{\|}~€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ]/s) ;
-    return 3 if( $_[0] && $_[0] =~ /<.*?>/s    ) ;
-    return 2 if( $_[0] && $_[0] =~ /[\r\n\t]/s ) ;
-    return 1 ;
+
+
+    my $data = shift ;
+
+    # TODO: 0x80, 0x81, 0x8d, 0x8f, 0x90, 0xa0 
+    my @bin_data = (     
+	0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8e, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 
+	0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9e, 0x9f, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 
+	0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 
+	0xbd, 0xbe, 0xbf, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 
+	0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf, 0xe0, 
+	0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1, 0xf2, 
+	0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff, 0x20
+	);
+
+    my $bin_string = join( '', ( map( pack("H*", $_), @bin_data ) ) ) ;
+
+    return 4 if( $data && $data =~ /[^\w\d\s!"#\$\%&'\(\)\*\+,\-\.\/:;<=>\?\@\[\\\]\^\`\{\|}~~$bin_string]/s )   ;
+    return 3 if( $data && $data =~ /<.*?>/s    ) ;
+    return 2 if( $data && $data =~ /[\r\n\t]/s ) ;
+    return 1                                     ;
 }
 
 #######
@@ -1284,127 +1428,6 @@ sub STORABLE_thaw {
 1;
 
 __END__
-
-=head1 NAME
-
-XML::Smart - A smart, easy and powerful way to access/create XML files/data.
-
-=head1 DESCRIPTION
-
-This module provides an easy way to access/create XML data. It's based on a HASH
-tree created from the XML data, and enables dynamic access to it through the 
-standard Perl syntax for Hash and Array, without necessarily caring about which 
-you are working with. In other words, B<each point in the tree works as a Hash and
-an Array at the same time>!
-
-This module additionally provides special resources such as: search for nodes by 
-attribute, select an attribute value in each multiple node,  change the returned 
-format, and so on.
-
-The module also automatically handles binary data (encoding/decoding to/from base64),
-CDATA (like contents with <tags>) and Unicode. It can be used to create XML files,
-load XML from the Web ( just by using an URL as the file path ) and has an easy
-way to send XML data through sockets - just adding the length of the data in
-the <?xml?> header.
-
-You can use I<XML::Smart> with L<XML::Parser>, or with the 2 standart parsers of
-XML::Smart:
-
-=over 10
-
-=item I<XML::Smart::Parser>
-
-=item I<XML::Smart::HTMLParser>.
-
-=back
-
-I<XML::Smart::HTMLParser> can be used to load/parse wild/bad XML data, or HTML tags.
-
-=head1 Tutorial and F.A.Q.
-
-You can find some extra documents about I<XML::Smart> at:
-
-=over 2
-
-=item L<XML::Smart::Tutorial> - Tutorial and examples for XML::Smart.
-
-=item L<XML::Smart::FAQ>      - Frequently Asked Questions about XML::Smart.
-
-=back
-
-=cut
-
-=head1 USAGE
-
-  ## Create the object and load the file:
-  my $XML = XML::Smart->new('file.xml') ;
-  
-  ## Force the use of the parser 'XML::Smart::Parser'.
-  my $XML = XML::Smart->new('file.xml' , 'XML::Smart::Parser') ;
-  
-  ## Get from the web:
-  my $XML = XML::Smart->new('http://www.perlmonks.org/index.pl?node_id=16046') ;
-
-  ## Cut the root:
-  $XML = $XML->cut_root ;
-
-  ## Or change the root:
-  $XML = $XML->{hosts} ;
-
-  ## Get the address [0] of server [0]:
-  my $srv0_addr0 = $XML->{server}[0]{address}[0] ;
-  ## ...or...
-  my $srv0_addr0 = $XML->{server}{address} ;
-  
-  ## Get the server where the attibute 'type' eq 'suse':
-  my $server = $XML->{server}('type','eq','suse') ;
-  
-  ## Get the address again:
-  my $addr1 = $server->{address}[1] ;
-  ## ...or...
-  my $addr1 = $XML->{server}('type','eq','suse'){address}[1] ;
-  
-  ## Get all the addresses of a server:
-  my @addrs = @{$XML->{server}{address}} ;
-  ## ...or...
-  my @addrs = $XML->{server}{address}('@') ;
-  
-  ## Get a list of types of all the servers:
-  my @types = $XML->{server}('[@]','type') ;
-  
-  ## Add a new server node:
-  my $newsrv = {
-  os      => 'Linux' ,
-  type    => 'Mandrake' ,
-  version => 8.9 ,
-  address => [qw(192.168.3.201 192.168.3.202)]
-  } ;
-  
-  push(@{$XML->{server}} , $newsrv) ;
-
-  ## Get/rebuild the XML data:
-  my $xmldata = $XML->data ;
-  
-  ## Save in some file:
-  $XML->save('newfile.xml') ;
-  
-  ## Send through a socket:
-  print $socket $XML->data(length => 1) ; ## show the 'length' in the XML header to the
-                                          ## socket know the amount of data to read.
-  
-  __DATA__
-  <?xml version="1.0" encoding="iso-8859-1"?>
-  <hosts>
-    <server os="linux" type="redhat" version="8.0">
-      <address>192.168.0.1</address>
-      <address>192.168.0.2</address>
-    </server>
-    <server os="linux" type="suse" version="7.0">
-      <address>192.168.1.10</address>
-      <address>192.168.1.20</address>
-    </server>
-    <server address="192.168.2.100" os="linux" type="conectiva" version="9.0"/>
-  </hosts>
 
 =head1 METHODS
 
@@ -2241,15 +2264,15 @@ detected using these rules:
     
     \s \w \d
     !"#$%&'()*+,-./:;<=>?@[\]^`{|}~
-    0x80, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8e, 0x91, 0x92, 0x93, 0x94, 0x95, 
-    0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9e, 0x9f, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 
-    0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 
-    0xbc, 0xbd, 0xbe, 0xbf, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 
-    0xce, 0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf, 
-    0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1, 
-    0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff, 0x20
+    0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8e, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 
+    0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9e, 0x9f, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 
+    0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 
+    0xbd, 0xbe, 0xbf, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 
+    0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf, 0xe0, 
+    0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1, 0xf2, 
+    0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff, 0x20
 
-  TODO: 0x81, 0x8d, 0x8f, 0x90, 0xa0 
+  TODO: 0x80, 0x81, 0x8d, 0x8f, 0x90, 0xa0 
   
   CDATA:
   - If have tags: <...>
@@ -2286,12 +2309,12 @@ When creating XML data, if any UTF-8 character is detected the I<encoding> attri
 in the <?xml ...?> header will be set to UTF-8:
 
   <?xml version="1.0" encoding="utf-8" ?>
-  <data>Ã€</data>
+  <data>0x82, 0x83</data>
 
 If not, the I<iso-8859-1> is used:
 
   <?xml version="1.0" encoding="iso-8859-1" ?>
-  <data>€</data>
+  <data>0x82</data>
 
 When loading XML data with UTF-8, Perl (5.8+) should make all the work internally.
 
@@ -2498,7 +2521,7 @@ key. So this actually returns another object, pointhing (inside it) to the key:
   * Finish XPath implementation.
   * DTD - Handle <!DOCTYPE> gracefully.
   * Implement a better way to declare meta tags.
-  * Add 0x81, 0x8d, 0x8f, 0x90, 0xa0 ( multi byte characters to the list of accepted binary characters )
+  * Add 0x80, 0x81, 0x8d, 0x8f, 0x90, 0xa0 ( multi byte characters to the list of accepted binary characters )
 
 
 

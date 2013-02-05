@@ -36,11 +36,11 @@ XML::Smart - A smart, easy and powerful way to access or create XML from fiels, 
 
 =head1 VERSION
 
-Version 1.74
+Version 1.75
 
 =cut
 
-our $VERSION = '1.74' ;
+our $VERSION = '1.75' ;
 
 
 =head1 SYNOPSIS

@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::Smart.
 
+1.76  2013-2-05
+    - Fixed dependency fail by skipping author tests.
+
 1.75  2013-2-05
     - Fixed dependency fail by adding prerequisite 'Object::MultiType'  => 0.03
 

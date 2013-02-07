@@ -5,9 +5,25 @@ use Test                    ;
 
 use ExtUtils::MakeMaker     ;
 
-BEGIN { plan tests => 164 } ;
+BEGIN { 
+    
+    if( $ENV{RELEASE_TESTING} ) {
+	plan tests => 164 ;
+    } else { 
+	plan tests => 1   ;
+    }
+
+} ;
 
 use XML::Smart              ;
+
+
+unless( $ENV{ RELEASE_TESTING } ) { 
+    
+    ok( 1, 1 ) ;
+    exit() ;
+}
+
 
 my $DATA = q`<?xml version="1.0" encoding="iso-8859-1"?>
 <hosts>

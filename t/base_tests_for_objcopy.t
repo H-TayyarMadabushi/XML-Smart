@@ -1,14 +1,11 @@
 use strict                  ;
 use warnings FATAL => 'all' ;
 
-use Test                    ;
+use Test::More              ;
 
 use ExtUtils::MakeMaker     ;
 
-BEGIN { plan tests => 163 } ;
-
 use XML::Smart              ;
-
 
 my $DATA = q`<?xml version="1.0" encoding="iso-8859-1"?>
 <hosts>
@@ -25,9 +22,10 @@ my $DATA = q`<?xml version="1.0" encoding="iso-8859-1"?>
 </hosts>
 `;
 
+
 ##if (0) {
 #########################
-{
+subtest 'HTML Tests' => sub {
 
     my  $XML = XML::Smart->new( q`
   <html>
@@ -47,26 +45,31 @@ my $DATA = q`<?xml version="1.0" encoding="iso-8859-1"?>
   ` );
 
   $XML = $XML->copy() ;
+  
   my $data = $XML->data( noheader => 1 ) ;
   $data =~ s/\s+/ /gs ;
   
-  ok($data , q`<html> <head> <title>Blah blah</title> </head> <body> <form> <input id="0"/> <br/> <input id="2"/> <br/> </form> </body> <null/> </html> `) ;
+  cmp_ok($data, 'eq', q`<html> <head> <title>Blah blah</title> </head> <body> <form> <input id="0"/> <br/> <input id="2"/> <br/> </form> </body> <null/> </html> `) ;
   
   my @order = $XML->{html}{body}{form}->order ;
-  ok(join(" ", @order) eq 'input br input br') ;
+  cmp_ok( join(" ", @order), 'eq', 'input br input br') ;
   
   $XML->{html}{body}{form}->set_order( qw(br input input br) ) ;
   @order = $XML->{html}{body}{form}->order ;
-  ok(join(" ", @order) eq 'br input input br') ;
+  cmp_ok( join(" ", @order), 'eq', 'br input input br') ;
 
   $data = $XML->data( noheader => 1 ) ;
   $data =~ s/\s+/ /gs ;
   
-  ok($data , q`<html> <head> <title>Blah blah</title> </head> <body> <form> <br/> <input id="0"/> <input id="2"/> <br/> </form> </body> <null/> </html> `) ;
+  cmp_ok( $data, 'eq', q`<html> <head> <title>Blah blah</title> </head> <body> <form> <br/> <input id="0"/> <input id="2"/> <br/> </form> </body> <null/> </html> `) ;
 
-}
-#########################
-{
+    done_testing() ;
+
+} ;
+
+
+
+subtest 'Pointer Tests' => sub {
 
   my $XML = XML::Smart->new(q`
 <root>
@@ -79,13 +82,11 @@ content1
 content2
 </root>
   ` , 'XML::Smart::Parser') ;
-
-
   $XML = $XML->copy() ;
-  my $data = $XML->data( noheader => 1 ) ;
-
   
-  my $expected_data = q`<root>
+  my $data = $XML->data(noheader => 1) ;
+  
+  cmp_ok($data, 'eq', q`<root>
 content0
 <tag1 arg1="123">
     <sub arg="1">sub_content</sub></tag1>
@@ -94,17 +95,15 @@ content1
 content2
 </root>
 
-` ;
+`) ;
+  
 
-  $data =~ s/\s//g;
-  $expected_data =~ s/\s//g;
-  ok($data , $expected_data ) ;
-
-  ok( tied $XML->{root}->pointer->{CONTENT} ) ;
+  my $tmp = tied $XML->{root}->pointer->{CONTENT} ;
+  isnt( tied $XML->{root}->pointer->{CONTENT}, undef ) ;
   
   my $cont = $XML->{root}->{CONTENT} ;
   
-  ok($cont , q`
+  cmp_ok($cont, 'eq', q`
 content0
 
 content1
@@ -114,7 +113,7 @@ content2
   
   my $cont_ = $XML->{root}->content ;
 
-  ok($cont_ , q`
+  cmp_ok( $cont_, 'eq', q`
 content0
 
 content1
@@ -126,37 +125,56 @@ content2
   
   my @cont = $XML->{root}->content ;
   
-  ok($cont[0] , "\ncontent0\n") ;
-  ok($cont[1] , "set1") ;
-  ok($cont[2] , "\ncontent2\n") ;
+  cmp_ok($cont[0], 'eq', "\ncontent0\n") ;
+  cmp_ok($cont[1], 'eq', "set1") ;
+  cmp_ok($cont[2], 'eq', "\ncontent2\n") ;
   
   $XML->{root}->{CONTENT} = 123 ;
   
   my $cont_2 = $XML->{root}->content ;
   
-  skip( ($] >= 5.007 && $] <= 5.008 ? "Skip on $]" : 0 ) , $cont_2 , 123) ;
+  subtest 'Perl Version Tests' => sub { 
+      if( $] >= 5.007 && $] <= 5.008 ) { 
+	  plan skip_all => "Skip on $]" ;
+      }
+      cmp_ok( $cont_2, '==', 123) ;
+      is( tied $XML->{root}->pointer->{CONTENT}, undef ) ;
+      done_testing() ;
+  } ;
   
-  skip( ($] >= 5.007 && $] <= 5.008 ? "Skip on $]" : 0 ) , !tied $XML->{root}->pointer->{CONTENT} ) ;
   
-  ok( !tied $XML->{root}{tag1}{sub}->pointer->{CONTENT} ) ;
+  is( tied $XML->{root}{tag1}{sub}->pointer->{CONTENT}, undef, 'Undefined' ) ;
   
   my $sub_cont = $XML->{root}{tag1}{sub}->{CONTENT} ;
   
-  ok($sub_cont , 'sub_content') ;
+  cmp_ok($sub_cont, 'eq',  'sub_content') ;
   
   $data = $XML->data(noheader => 1) ;
   
-  skip( ($] >= 5.007 && $] <= 5.008 ? "Skip on $]" : 0 ) ,
-  $data , q`<root>123<tag1 arg1="123">
+  subtest 'Perl Version Tests' => sub { 
+      if( $] >= 5.007 && $] <= 5.008 ) { 
+	  plan skip_all => "Skip on $]" ;
+      }
+      cmp_ok( $data , 'eq', q`<root>123<tag1 arg1="123">
     <sub arg="1">sub_content</sub>
   </tag1>
   <tag2 arg1="123"/></root>
 
-`) ;
+`
+	  ) ;
+      done_testing() ;
   
-}
-#########################
-{
+  };
+
+  done_testing() ;
+
+} ;
+
+
+
+
+
+subtest 'Content Set tests' => sub {
   
   my $xml = new XML::Smart(q`<?xml version="1.0" encoding="iso-8859-1" ?>
 <root>
@@ -164,8 +182,8 @@ content2
   <phone>bbb</phone>
 </root>
 `) ;
-
   $xml = $xml->copy() ;
+
   $xml = $xml->{root} ;
 
   $xml->{phone}->content('XXX') ;
@@ -176,7 +194,7 @@ content2
 
   my $data = $xml->data(noheader => 1) ;
 
-  ok($data , q`<root>
+  cmp_ok($data, 'eq', q`<root>
   <phone>XXX</phone>
   <phone>YYY</phone>
   <test>ZZZ</test>
@@ -184,9 +202,52 @@ content2
 
 `) ;  
 
-}
+  done_testing() ;
+
+} ;
+
+
+
+
+
+subtest 'Data Order Tests' => sub {
+
+  my $xml = new XML::Smart(q`
+<foo>
+TEXT1 & more
+<if.1>
+  aaa
+</if.1>
+<!-- CMT -->
+<elsif.2>
+  bbb
+</elsif.2>
+</foo>  
+  `,'html') ;
+  $xml = $xml->copy() ;
+  
+  my $data = $xml->data(noident=>1 , noheader => 1 , wild=>1) ;
+  
+  cmp_ok($data, 'eq', q`<foo>
+TEXT1 &amp; more
+<if.1>
+  aaa
+</if.1>
+<!-- CMT -->
+<elsif.2>
+  bbb
+</elsif.2></foo>
+
+`) ;
+
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+subtest 'XML::Smart::Parser Tests' => sub {
 
   my $XML = XML::Smart->new('<a>text1<b>foo</b><c>bar</c>text2</a>' , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
@@ -194,27 +255,35 @@ content2
   my $data = $XML->data(noheader => 1) ;
   $data =~ s/\s//g ;
 
-  ok($data,'<a>text1<b>foo</b><c>bar</c>text2</a>') ;
+  cmp_ok($data, 'eq', '<a>text1<b>foo</b><c>bar</c>text2</a>') ;
+
+  done_testing() ;
   
-}
+} ;
 #########################
-{
+
+
+
+subtest 'XML::Smart::Parser args test' => sub {
 
   my $XML = XML::Smart->new('<root><foo bar="x"/></root>' , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
-
   my $data = $XML->data(noheader => 1) ;
   
   $data =~ s/\s//gs ;
-  ok($data,'<root><foobar="x"/></root>') ;
+  cmp_ok($data, 'eq', '<root><foobar="x"/></root>') ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+subtest 'XML::Smart::Parser nometagen tests' => sub {
   
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
-
   
   my $data = $XML->data(nometagen => 1) ;
   $data =~ s/\s//gs ;
@@ -222,18 +291,23 @@ content2
   my $data_org = $DATA ;
   $data_org =~ s/\s//gs ;
   
-  ok($data,$data_org) ;
+  cmp_ok( $data, 'eq', $data_org) ;
+
+  done_testing() ;
     
-}
+} ;
 #########################
-{
+
+
+
+subtest 'XML::Smart::HTMLParser Tests' => sub {
 
   my $XML = XML::Smart->new('<root><foo bar="x"/></root>' , 'XML::Smart::HTMLParser') ;
   $XML = $XML->copy() ;
 
   my $data = $XML->data(noheader => 1) ;
   $data =~ s/\s//gs ;
-  ok($data,'<root><foobar="x"/></root>') ;
+  cmp_ok( $data, 'eq', '<root><foobar="x"/></root>' ) ;
   
   $XML = XML::Smart->new(q`
   <html><title>TITLE</title>
@@ -245,10 +319,10 @@ content2
   </body>
   </html>
   ` , 'HTML') ;
-  
   $XML = $XML->copy() ;
+  
   $data = $XML->data(noheader => 1 , nospace => 1 ) ;
-  ok($data,q`<html><title>TITLE</title><body bgcolor="#000000"><foo1 baz='y1=name\" bar1=x1 &gt; end' w="q"/><foo2 bar2="" arg0="" x="y">FOO2-DATA</foo2><foo3 bar3="x3"/><foo4 url="http://www.com/dir/file.x?query=value&amp;x=y"/></body></html>`) ;
+  cmp_ok($data, 'eq', q`<html><title>TITLE</title><body bgcolor="#000000"><foo1 baz='y1=name\" bar1=x1 &gt; end' w="q"/><foo2 bar2="" arg0="" x="y">FOO2-DATA</foo2><foo3 bar3="x3"/><foo4 url="http://www.com/dir/file.x?query=value&amp;x=y"/></body></html>`) ;
 
   $XML = XML::Smart->new(q`
   <html><title>TITLE</title>
@@ -267,12 +341,25 @@ content2
   $data = $XML->data(noheader => 1 , nospace => 1) ;
   $data =~ s/\s//gs ;
   
-  ok($data,q`<html><title>TITLE</title><bodybgcolor="#000000"><foo1bar1="x1"/><SCRIPTLANGUAGE="JavaScript"><!--functionstopError(){returntrue;}window.onerror=stopError;document.writeln("some>>written!");--></SCRIPT><foo2bar2="x2"/></body></html>`);
+  cmp_ok($data, 'eq', q`<html><title>TITLE</title><bodybgcolor="#000000"><foo1bar1="x1"/><SCRIPTLANGUAGE="JavaScript"><!--functionstopError(){returntrue;}window.onerror=stopError;document.writeln("some>>written!");--></SCRIPT><foo2bar2="x2"/></body></html>`);
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
-  my $XML = XML::Smart->new(q`
+
+
+
+
+
+
+subtest 'XML::Smart::HTMLParser args Tests' => sub {
+
+  TODO: { 
+
+      local $TODO = "object copy persist wild char state not implemeted"  ;
+
+      my $XML = XML::Smart->new(q`
   <root>
     <foo name='x' *>
       <.sub1 arg="1" x=1 />
@@ -284,10 +371,10 @@ content2
   </root>
   ` , 'XML::Smart::HTMLParser') ;
   
-  my $data = $XML->data(noheader => 1 , wild => 1) ;
-  $XML = $XML->copy() ;
-  
-  ok($data , q`<root>
+      $XML = $XML->copy() ;
+      my $data = $XML->data(noheader => 1 , wild => 1) ;
+      
+      cmp_ok( $data, 'eq', q`<root>
   <foo name="x" *>
     <.sub1 arg="1" x="1"/>
     <.sub2 arg="2"/>
@@ -298,17 +385,27 @@ content2
 </root>
 
 `);
-
-}
+      
+    }
+    
+    done_testing() ;
+      
+} ;
 #########################
-{
+
+
+
+
+
+
+subtest 'XML::Smart::Parser Tree tests' => sub {
   my $XML0 = XML::Smart->new(q`<root><foo1 name='x'/></root>` , 'XML::Smart::Parser') ;
   $XML0 = $XML0->copy() ;
-
   my $XML1 = XML::Smart->new(q`<root><foo2 name='y'/></root>` , 'XML::Smart::Parser') ;
   $XML1 = $XML1->copy() ;
   
   my $XML = XML::Smart->new() ;
+  $XML = $XML->copy() ;
   
   $XML->{sub}{sub2} = $XML0->tree ;
   push(@{$XML->{sub}{sub2}} , $XML1->tree ) ;
@@ -316,98 +413,128 @@ content2
   my $data = $XML->data(noheader => 1) ;
   
   $data =~ s/\s//gs ;
-  ok($data,'<sub><sub2><root><foo1name="x"/></root></sub2><sub2><root><foo2name="y"/></root></sub2></sub>') ;
+  cmp_ok( $data, 'eq', '<sub><sub2><root><foo1name="x"/></root></sub2><sub2><root><foo2name="y"/></root></sub2></sub>') ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+subtest 'XML::Smart::Parser Array Tests' => sub {
+
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
   $XML = $XML->{hosts} ;
   
   my $addr = $XML->{server}[0]{address} ;
-  ok($addr,'192.168.0.1') ;
+  cmp_ok($addr, 'eq', '192.168.0.1') ;
   
   my $addr0 = $XML->{server}[0]{address}[0] ;
-  ok($addr,$addr0);
+  cmp_ok( $addr, 'eq', $addr0);
   
   my $addr1 = $XML->{server}{address}[1] ;
-  ok($addr1,'192.168.0.2') ;
+  cmp_ok( $addr1, 'eq', '192.168.0.2') ;
   
   my $addr01 = $XML->{server}[0]{address}[1] ;
-  ok($addr1,$addr01);
+  cmp_ok( $addr1, 'eq', $addr01);
   
   my @addrs = @{$XML->{server}{address}} ;
   
-  ok($addrs[0],$addr0);
-  ok($addrs[1],$addr1);
+  cmp_ok( $addrs[0], 'eq', $addr0);
+  cmp_ok( $addrs[1], 'eq', $addr1);
   
   @addrs = @{$XML->{server}[0]{address}} ;
   
-  ok($addrs[0],$addr0);
-  ok($addrs[1],$addr1);
-}
+  cmp_ok( $addrs[0], 'eq', $addr0);
+  cmp_ok( $addrs[1], 'eq', $addr1);
+  
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+subtest 'XML::Smart::Parser args Tests' => sub {
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
   $XML = $XML->{hosts} ;
   
   my $addr = $XML->{'server'}('type','eq','suse'){'address'} ;
-  ok($addr,'192.168.1.10') ;
+  cmp_ok( $addr, 'eq', '192.168.1.10') ;
   
   my $addr0 = $XML->{'server'}('type','eq','suse'){'address'}[0] ;
-  ok($addr,$addr0) ;
+  cmp_ok( $addr, 'eq', $addr0) ;
   
   my $addr1 = $XML->{'server'}('type','eq','suse'){'address'}[1] ;
-  ok($addr1,'192.168.1.20') ;
+  cmp_ok( $addr1, 'eq', '192.168.1.20') ;
   
   my $type = $XML->{'server'}('version','>=','9'){'type'} ;
-  ok($type,'conectiva') ;
+  cmp_ok( $type, 'eq', 'conectiva') ;
   
   $addr = $XML->{'server'}('version','>=','9'){'address'} ;
-  ok($addr,'192.168.2.100') ;
+  cmp_ok( $addr, 'eq', '192.168.2.100') ;
   
   $addr0 = $XML->{'server'}('version','>=','9'){'address'}[0] ;
-  ok($addr0,$addr) ;
+  cmp_ok( $addr0, 'eq', $addr) ;
+
+  done_testing() ;
     
-}
+} ;
 #########################
-{
+
+
+
+
+subtest 'XML::Smart::Parser Args Array Tests' => sub {
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
   $XML = $XML->{hosts} ;
+  $XML = $XML->copy() ;
 
   my $newsrv = {
-  os => 'Linux' ,
-  type => 'mandrake' ,
-  version => 8.9 ,
-  address => '192.168.3.201' ,
+      os => 'Linux' ,
+      type => 'mandrake' ,
+      version => 8.9 ,
+      address => '192.168.3.201' ,
   } ;
 
   push(@{$XML->{server}} , $newsrv) ;
   
   my $addr0 = $XML->{'server'}('type','eq','mandrake'){'address'}[0] ;
-  ok($addr0,'192.168.3.201') ;
+  cmp_ok( $addr0, 'eq', '192.168.3.201') ;
   
   $XML->{'server'}('type','eq','mandrake'){'address'}[1] = '192.168.3.202' ;
+  $XML = $XML->copy() ;
 
   my $addr1 = $XML->{'server'}('type','eq','mandrake'){'address'}[1] ;
-  ok($addr1,'192.168.3.202') ;
+  cmp_ok( $addr1, 'eq', '192.168.3.202') ;
   
   push(@{$XML->{'server'}('type','eq','conectiva'){'address'}} , '192.168.2.101') ;
 
   $addr1 = $XML->{'server'}('type','eq','conectiva'){'address'}[1] ;
-  ok($addr1,'192.168.2.101') ;
+  cmp_ok( $addr1, 'eq', '192.168.2.101') ;
   
   $addr1 = $XML->{'server'}[2]{'address'}[1] ;
-  ok($addr1,'192.168.2.101') ;
+  cmp_ok( $addr1, 'eq', '192.168.2.101') ;
   
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+
+subtest 'Args regex Match Tests' => sub {
   
   my $XML = XML::Smart->new(q`
   <users>
@@ -416,37 +543,53 @@ content2
     <jack name="Jack Z" email="jack@mail.com"/>
   </users>
   ` , 'XML::Smart::Parser') ;
-  $XML = $XML->copy() ;
   
+  $XML = $XML->copy() ;
   my @users = $XML->{users}('email','=~','^jo') ;
   
-  ok( $users[0]->{name} , 'Joe X') ;
-  ok( $users[1]->{name} , 'JoH Y') ;
+  cmp_ok( $users[0]->{name}, 'eq', 'Joe X') ;
+  cmp_ok( $users[1]->{name}, 'eq', 'JoH Y') ;
+
+  done_testing() ;
   
-}
+} ;
 #########################
-{
+
+
+
+
+subtest 'Default Parser Array Test' => sub {
+
   my $XML = XML::Smart->new() ;
-  $XML = $XML->copy() ;
   
   $XML->{server} = {
-  os => 'Linux' ,
-  type => 'mandrake' ,
-  version => 8.9 ,
-  address => '192.168.3.201' ,
+      os => 'Linux' ,
+      type => 'mandrake' ,
+      version => 8.9 ,
+      address => '192.168.3.201' ,
   } ;
-
+  
+  $XML = $XML->copy() ;
   $XML->{server}{address}[1] = '192.168.3.202' ;
+  $XML = $XML->copy() ;
   
   my $data = $XML->data(noheader => 1) ;
   $data =~ s/\s//gs ;
     
   my $dataok = q`<serveros="Linux"type="mandrake"version="8.9"><address>192.168.3.201</address><address>192.168.3.202</address></server>`;
-  ok($data,$dataok) ;
+  cmp_ok( $data, 'eq', $dataok ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+
+subtest 'XML::Smart::Parser tags Test' => sub {
 
   my $XML = XML::Smart->new('<foo port="80">ct<i>a</i><i>b</i></foo>' , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
@@ -455,34 +598,48 @@ content2
   
   my $dataok = qq`<fooport="80">ct<i>a</i><i>b</i></foo>` ;
   
-  ok($data,$dataok) ;
+  cmp_ok( $data, 'eq', $dataok ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+subtest 'XML::Smart::Parser data() options tests' => sub {
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
   
   $XML->{'hosts'}{'server'}('type','eq','conectiva'){'address'}[1] = '' ;
+  $XML = $XML->copy() ;
   
   my $data = $XML->data(
-  noident => 1 ,
-  nospace => 1 ,
-  lowtag => 1 ,
-  upertag => 1 ,
-  uperarg => 1 ,
-  noheader => 1 ,
-  ) ;
+      noident => 1 ,
+      nospace => 1 ,
+      lowtag => 1 ,
+      upertag => 1 ,
+      uperarg => 1 ,
+      noheader => 1 ,
+      ) ;
   
   $data =~ s/\s//gs ;
   
   my $dataok = q`<HOSTS><SERVEROS="linux"TYPE="redhat"VERSION="8.0"><ADDRESS>192.168.0.1</ADDRESS><ADDRESS>192.168.0.2</ADDRESS></SERVER><SERVEROS="linux"TYPE="suse"VERSION="7.0"><ADDRESS>192.168.1.10</ADDRESS><ADDRESS>192.168.1.20</ADDRESS></SERVER><SERVERADDRESS="192.168.2.100"OS="linux"TYPE="conectiva"VERSION="9.0"/><SERVERADDRESS="192.168.3.30"OS="bsd"TYPE="freebsd"VERSION="9.0"/></HOSTS>`;
-  ok($data,$dataok) ;
+  cmp_ok( $data, 'eq', $dataok ) ;
   
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'XML::Smart::Parser Data populate test' => sub {
 
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
@@ -491,77 +648,105 @@ content2
   $XML->{var } = 10    ;
   
   $XML->{addr} = [qw(1 2 3)] ;
+  $XML = $XML->copy() ;
   
   my $data = $XML->data(length => 1 , nometagen => 1 ) ;
   $data =~ s/\s//gs ;
   
   my $dataok = q`<?xmlversion="1.0"encoding="iso-8859-1"length="88"?><rootdata="aaa"var="10"><addr>1</addr><addr>2</addr><addr>3</addr></root>`;
 
-  ok($data,$dataok) ;
-}
+  cmp_ok( $data, 'eq', $dataok ) ;
+
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+
+
+subtest 'XML::Smart::Parser Data Populate Array test' => sub {
 
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
   
   $XML->{hosts}{server} = {
-  os => 'lx'  ,
-  type => 'red'  ,
-  ver => 123 ,
+      os => 'lx'  ,
+      type => 'red'  ,
+      ver => 123 ,
   } ;
+  $XML = $XML->copy() ;
   
   my $data = $XML->data(noheader => 1) ;
   $data =~ s/\s//gs ;
   
   my $dataok = q`<hosts><serveros="lx"type="red"ver="123"/></hosts>`;
   
-  ok($data,$dataok) ;
+  cmp_ok( $data, 'eq', $dataok ) ;
                        
   $XML->{hosts}[1]{server}[0] = {
-  os => 'LX'  ,
-  type => 'red'  ,
-  ver => 123 ,
+      os => 'LX'  ,
+      type => 'red'  ,
+      ver => 123 ,
   } ;
+  $XML = $XML->copy() ;
   
   $data = $XML->data(noheader => 1) ;
   $data =~ s/\s//gs ;
   
   $dataok = q`<root><hosts><serveros="lx"type="red"ver="123"/></hosts><hosts><serveros="LX"type="red"ver="123"/></hosts></root>`;
   
-  ok($data,$dataok) ;
+  cmp_ok( $data, 'eq', $dataok ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'XML::Smart::Parser Array assign test' => sub {
 
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
                           
   $XML->{hosts}[1]{server}[0] = {
-  os => 'LX'  ,
-  type => 'red'  ,
-  ver => 123 ,
+      os => 'LX'  ,
+      type => 'red'  ,
+      ver => 123 ,
   } ;
+  $XML = $XML->copy() ;
   
   my $data = $XML->data(noheader => 1) ;
   $data =~ s/\s//gs ;
   
   my $dataok = q`<hosts><serveros="LX"type="red"ver="123"/></hosts>`;
   
-  ok($data,$dataok) ;
+  cmp_ok( $data, 'eq', $dataok ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'XML::Smart::Parser Hash assign test' => sub {
 
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
                           
   my $srv = {
-  os => 'lx'  ,
-  type => 'red'  ,
-  ver => 123 ,
+      os => 'lx'  ,
+      type => 'red'  ,
+      ver => 123 ,
   } ;
 
   push( @{$XML->{hosts}} , {XXXXXX => 1}) ;
@@ -569,58 +754,83 @@ content2
   unshift( @{$XML->{hosts}}  , $srv) ;
   
   push( @{$XML->{hosts}{more}}  , {YYYY => 1}) ;
+  $XML = $XML->copy() ;
   
   my $data = $XML->data(noheader => 1) ;
   $data =~ s/\s//gs ;
   
   my $dataok = q`<root><hostsos="lx"type="red"ver="123"><moreYYYY="1"/></hosts><hostsXXXXXX="1"/></root>` ;
   
-  ok($data,$dataok) ;
+  cmp_ok( $data, 'eq', $dataok ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'XML::Smart::Parser Extended Hash assign test' => sub {
 
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
   
   $XML->{hosts}{server} = [
-  { os => 'lx' , type => 'a' , ver => '1' ,} ,
-  { os => 'lx ', type => 'b' , ver => '2' ,} ,
-  ];
+      { os => 'lx' , type => 'a' , ver => '1' ,} ,
+      { os => 'lx ', type => 'b' , ver => '2' ,} ,
+      ];
+  $XML = $XML->copy() ;
   
-  ok( $XML->{hosts}{server}{type} , 'a') ;
+  cmp_ok( $XML->{hosts}{server}{type}, 'eq', 'a' ) ;
   
   my $srv0 = shift( @{$XML->{hosts}{server}} ) ;
-  ok( $$srv0{type} , 'a') ;
+  cmp_ok( $$srv0{type}, 'eq', 'a' ) ;
   
-  ok( $XML->{hosts}{server}{type} , 'b') ;
-  ok( $XML->{hosts}{server}{type}[0] , 'b') ;
-  ok( $XML->{hosts}{server}[0]{type}[0] , 'b') ;
-  ok( $XML->{hosts}[0]{server}[0]{type}[0] , 'b') ;
+  cmp_ok( $XML->{hosts}{server}{type}, 'eq', 'b' ) ;
+  cmp_ok( $XML->{hosts}{server}{type}[0], 'eq', 'b' ) ;
+  cmp_ok( $XML->{hosts}{server}[0]{type}[0], 'eq', 'b' ) ;
+  cmp_ok( $XML->{hosts}[0]{server}[0]{type}[0], 'eq', 'b' ) ;
   
   my $srv1 = pop( @{$XML->{hosts}{server}} ) ;
-  ok( $$srv1{type} , 'b') ;
+  cmp_ok( $$srv1{type}, 'eq', 'b' ) ;
   
   my $data = $XML->data(noheader => 1 , nospace=>1) ;
-  ok($data , '<hosts></hosts>') ;
+  cmp_ok($data, 'eq', '<hosts></hosts>' ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
 
-  my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+
+
+
+
+
+subtest 'XML::Smart::Parser node extraction test' => sub {
+
+  my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser' ) ;
   $XML = $XML->copy() ;
 
   my @types = $XML->{hosts}{server}('[@]','type') ;
-  ok("@types" , 'redhat suse conectiva freebsd') ;
+  cmp_ok("@types", 'eq', 'redhat suse conectiva freebsd' ) ;
+
+  $XML = $XML->copy() ;
 
   @types = $XML->{hosts}{server}{type}('<@') ;
-  ok("@types" , 'redhat suse conectiva freebsd') ;
+  cmp_ok("@types", 'eq', 'redhat suse conectiva freebsd' ) ;
+
+  done_testing() ;
   
-}
+} ;
 #########################
-{
+
+
+
+
+subtest 'XML::Smart::Parser Extended node extraction test' => sub {
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
@@ -629,52 +839,76 @@ content2
   
   my @types ;
   foreach my $srvs_i ( @srvs ) { push(@types , $srvs_i->{type}) ;}
-  ok("@types" , 'redhat suse conectiva') ;
+  cmp_ok("@types", 'eq', 'redhat suse conectiva' ) ;
 
+  $XML = $XML->copy() ;
   @srvs = $XML->{hosts}{server}(['os','eq','linux'],['os','eq','bsd']) ;
   @types = () ;
   foreach my $srvs_i ( @srvs ) { push(@types , $srvs_i->{type}) ;}
-  ok("@types" , 'redhat suse conectiva freebsd') ;
+  cmp_ok("@types", 'eq', 'redhat suse conectiva freebsd' ) ;
+
+  done_testing() ;
   
-}
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'XML::Smart::Parser Data encode test' => sub {
 
   my $wild = pack("C", 127 ) ;
 
   my $data = qq`<?xml version="1.0" encoding="iso-8859-1"?><code>$wild</code>`;
-
+  
   my $XML = XML::Smart->new($data , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
 
-  ok($XML->{code} , $wild) ;
+  cmp_ok( $XML->{code}, 'eq', $wild ) ;
   $data = $XML->data() ;
   
   $XML = XML::Smart->new($data , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
 
-  ok($XML->{code} , $wild) ;
+  cmp_ok( $XML->{code}, 'eq', $wild ) ;
   
   my $data2 = $XML->data() ;
-  ok($data , $data2) ;
+  cmp_ok( $data, 'eq', $data2 ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+
+subtest 'XML::Smart::Parser cut_root test' => sub {
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+  $XML = $XML->copy() ;
   
   my $addr1 = $XML->{hosts}{server}{address} ;
   
+  $XML = $XML->copy() ;
   my $XML2 = $XML->cut_root ;
-  $XML2 = $XML2->copy() ;
   my $addr2 = $XML2->{server}{address} ;
 
-  ok($addr1,$addr2) ;
+  cmp_ok( $addr1, 'eq', $addr2 ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'XML::Smart::Parser Funny Char test' => sub {
 
   my $data = q`
   <root>
@@ -685,14 +919,20 @@ content2
   my $XML = XML::Smart->new($data , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
   
-  ok($XML->{root}{foo} , q` My Company & Name + x >> plus " + '...`) ;
+  cmp_ok( $XML->{root}{foo}, 'eq', q` My Company & Name + x >> plus " + '...` ) ;
   
   $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , q`<root><foo bar="x"> My Company &amp; Name + x &gt;&gt; plus " + '...</foo></root>`) ;
+  cmp_ok( $data, 'eq', q`<root><foo bar="x"> My Company &amp; Name + x &gt;&gt; plus " + '...</foo></root>` ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+subtest 'XML::Smart::Parser nodes test' => sub {
 
   my $XML = XML::Smart->new(q`
   <root>
@@ -701,24 +941,30 @@ content2
     </foo>
   </root>
   ` , 'XML::Smart::Parser') ;
-  
   $XML = $XML->copy() ;
+  
   my @nodes = $XML->{root}{foo}->nodes ;
   
-  ok($nodes[0]->{arg},'z');
+  cmp_ok( $nodes[0]->{arg}, 'eq', 'z') ;
 
   
   @nodes = $XML->{root}{foo}->nodes_keys ;
-  ok("@nodes",'bar');
+  cmp_ok( "@nodes", 'eq', 'bar' ) ;
 
-  ok($XML->{root}{foo}{bar}->is_node) ;
+  isnt( $XML->{root}{foo}{bar}->is_node, undef ) ;
   
   my @keys = $XML->{root}{foo}('@keys') ;
-  ok("@keys",'arg1 arg2 bar');  
+  cmp_ok("@keys", 'eq', 'arg1 arg2 bar' ) ;  
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+subtest 'XML::Smart::Parser CDATA test' => sub {
 
   my $data = qq`
   <root>
@@ -731,304 +977,391 @@ content2
   my $XML = XML::Smart->new($data , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
   
-  ok( $XML->{root}{item}{data} , q`some CDATA code <non> <parsed> <tag> end`) ;
+  cmp_ok( $XML->{root}{item}{data}, 'eq', q`some CDATA code <non> <parsed> <tag> end` ) ;
+
+  done_testing() ;
   
-}
+} ;
 #########################
-{
+
+
+
+
+subtest 'Default Parser Hash assign through array Test' => sub {
 
   my $XML = XML::Smart->new() ;
+  $XML = $XML->copy() ;
   
   $XML->{menu}{option}[0] = {
-  name => "Help" ,
-  level => {from => 1 , to => 99} ,
-  } ;
-
-  $XML->{menu}{option}[0]{sub}{option}[0] = {
-  name => "Busca" ,
-  level => {from => 1 , to => 99} ,
+      name => "Help" ,
+      level => {from => 1 , to => 99} ,
   } ;
   $XML = $XML->copy() ;
-
+  
+  $XML->{menu}{option}[0]{sub}{option}[0] = {
+      name => "Busca" ,
+      level => {from => 1 , to => 99} ,
+  } ;
+  $XML = $XML->copy() ;
+  
   my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
   
-  ok($data , q`<menu><option name="Help"><level from="1" to="99"/><sub><option name="Busca"><level from="1" to="99"/></option></sub></option></menu>`) ;
+  cmp_ok( $data, 'eq', q`<menu><option name="Help"><level from="1" to="99"/><sub><option name="Busca"><level from="1" to="99"/></option></sub></option></menu>`) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'Default Parser integer data tests' => sub {
   
   my $XML = XML::Smart->new() ;
+  $XML = $XML->copy() ;
   
   $XML->{menu}{arg1} = 123 ;
   $XML->{menu}{arg2} = 456 ;
   
   $XML->{menu}{arg2}{subarg} = 999 ;
-  
   $XML = $XML->copy() ;
-  ok($XML->{menu}{arg1} , 123) ;
-  ok($XML->{menu}{arg2} , 456) ;
-  ok($XML->{menu}{arg2}{subarg} , 999) ;
+  
+  cmp_ok($XML->{menu}{arg1}, '==', 123 ) ;
+  cmp_ok($XML->{menu}{arg2}, '==', 456 ) ;
+  cmp_ok($XML->{menu}{arg2}{subarg}, '==', 999 ) ;
 
   my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , q`<menu arg1="123"><arg2 subarg="999">456</arg2></menu>`) ;
+  cmp_ok($data, 'eq',  q`<menu arg1="123"><arg2 subarg="999">456</arg2></menu>` ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'Default Parser Args get Test' => sub {
   
   my $XML = XML::Smart->new() ;
+  $XML = $XML->copy() ;
   
   $XML->{menu}{arg1} = [1,2,3] ;
   $XML->{menu}{arg2} = 4 ;
   $XML = $XML->copy() ;
   
   my @arg1 = $XML->{menu}{arg1}('@') ;
-  ok($#arg1 , 2) ;
+  cmp_ok( $#arg1, '==', 2 ) ;
   
   my @arg2 = $XML->{menu}{arg2}('@') ;
-  ok($#arg2 , 0) ;
+  cmp_ok( $#arg2, '==', 0 ) ;
   
   my @arg3 = $XML->{menu}{arg3}('@') ;  
-  ok($#arg3 , -1) ;  
+  cmp_ok( $#arg3, '==', -1 ) ;  
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'Default Parser set_node and set_order Tests' => sub {
+
   
   my $XML = XML::Smart->new() ;
+  $XML = $XML->copy() ;
   
   $XML->{menu}{arg2} = 456 ;
   $XML->{menu}{arg1} = 123 ;
   $XML = $XML->copy() ;
   
   my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , q`<menu arg2="456" arg1="123"/>`) ;
+  cmp_ok( $data, 'eq', q`<menu arg2="456" arg1="123"/>` ) ;
 
+  # Cannot copy object between set_node and set_node( 0 )
   $XML->{menu}{arg2}->set_node ;
-  $XML = $XML->copy() ;
   $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , q`<menu arg1="123"><arg2>456</arg2></menu>`) ;
+  cmp_ok( $data, 'eq', q`<menu arg1="123"><arg2>456</arg2></menu>` ) ;
 
   $XML->{menu}{arg2}->set_node(0) ;
-  $XML = $XML->copy() ;
   $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  skip($data , q`<menu arg2="456" arg1="123"/>`, 'Copy does not save set_node info' ) ;
+  cmp_ok( $data, 'eq', q`<menu arg2="456" arg1="123"/>` ) ;
   
   $XML->{menu}->set_order('arg1' , 'arg2') ;
   $XML = $XML->copy() ;
   $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , q`<menu arg1="123" arg2="456"/>`) ;
+  cmp_ok( $data, 'eq', q`<menu arg1="123" arg2="456"/>` ) ;
   
   delete $XML->{menu}{arg2}[0] ;
-  $XML = $XML->copy() ;
 
   $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , q`<menu arg1="123"/>`) ;
+  cmp_ok( $data, 'eq', q`<menu arg1="123"/>` ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+subtest 'Default Parser XML Structure verification' => sub {
 
 
   my $XML = XML::Smart->new() ;
-  $XML->{root}{foo} = "bla bla bla";
   $XML = $XML->copy() ;
+  $XML->{root}{foo} = "bla bla bla";
 
   $XML->{root}{foo}->set_node(1) ;
   $XML = $XML->copy() ;
 
-  ok( $XML->tree->{root}{'/nodes'}{foo} , '1' ) ;
-  ok( $XML->tree->{root}{foo}{CONTENT} , "bla bla bla" ) ;  
+  cmp_ok( $XML->tree->{root}{'/nodes'}{foo}, 'eq', '1' ) ;
+  cmp_ok( $XML->tree->{root}{foo}{CONTENT}, 'eq', "bla bla bla" ) ;  
   
 
-  ok( ref $XML->tree->{ root }{ foo }, 'HASH' ) ;
+  cmp_ok( ref $XML->tree->{ root }{ foo }, 'eq', 'HASH' ) ;
 
   $XML->{root}{foo}->set_node(0) ;
 
-  ok( ref $XML->tree->{ root }{ foo }, '' ) ;
-  ok( !exists $XML->tree->{root}{'/nodes'}{foo} ) ;
+  cmp_ok( ref $XML->tree->{ root }{ foo }, 'eq', '' ) ;
+  is( $XML->tree->{root}{'/nodes'}{foo}, undef ) ;
   
+
+  ## Cannot copy object between set_cdata( 1 ), set_node( 1 ), set_binary( 1 ) and unset of same.
   $XML->{root}{foo}->set_cdata(1) ;
-  $XML = $XML->copy() ;
   
-  skip( $XML->tree->{root}{'/nodes'}{foo} , 'cdata,1,', 'Copy does not save set_cdata info'  ) ;
-  ok( $XML->tree->{root}{foo}{CONTENT} , "bla bla bla" ) ;  
+  cmp_ok( $XML->tree->{root}{'/nodes'}{foo}, 'eq', 'cdata,1,' )   ;
+  cmp_ok( $XML->tree->{root}{foo}{CONTENT} , 'eq', "bla bla bla" ) ;  
   
   $XML->{root}{foo}->set_node(1) ;
-  $XML = $XML->copy() ;
   
-  skip( $XML->tree->{root}{'/nodes'}{foo} , 'cdata,1,1', 'Copy does not save set_cdata info' ) ;
-  ok( $XML->tree->{root}{foo}{CONTENT} , "bla bla bla" ) ;  
+  cmp_ok( $XML->tree->{root}{'/nodes'}{foo}, 'eq', 'cdata,1,1' ) ;
+  cmp_ok( $XML->tree->{root}{foo}{CONTENT},  'eq', "bla bla bla" ) ;  
   
   $XML->{root}{foo}->set_binary(1) ;
-  $XML = $XML->copy() ;
   
-  skip( $XML->tree->{root}{'/nodes'}{foo} , 'binary,1,1', 'Copy does not save set_binary info' ) ;
-  ok( $XML->tree->{root}{foo}{CONTENT} , "bla bla bla" ) ;  
+  cmp_ok( $XML->tree->{root}{'/nodes'}{foo}, 'eq', 'binary,1,1' ) ;
+  cmp_ok( $XML->tree->{root}{foo}{CONTENT}, 'eq', "bla bla bla" ) ;  
   
   $XML->{root}{foo}->set_binary(0) ;
-  $XML = $XML->copy() ;
 
-  skip( $XML->tree->{root}{'/nodes'}{foo} , 'binary,0,1', 'Copy does not save set_binary info' ) ;
-  ok( $XML->tree->{root}{foo}{CONTENT} , "bla bla bla" ) ;  
+  cmp_ok( $XML->tree->{root}{'/nodes'}{foo}, 'eq', 'binary,0,1' ) ;
+  cmp_ok( $XML->tree->{root}{foo}{CONTENT}, 'eq', "bla bla bla" ) ;  
   
   $XML->{root}{foo}->set_auto_node ;
-  $XML = $XML->copy() ;
   
-  ok( $XML->tree->{root}{'/nodes'}{foo} , 1 ) ;
-  ok( $XML->tree->{root}{foo}{CONTENT} , "bla bla bla" ) ;  
+  cmp_ok( $XML->tree->{root}{'/nodes'}{foo}, 'eq', 1 ) ;
+  cmp_ok( $XML->tree->{root}{foo}{CONTENT}, 'eq', "bla bla bla" ) ;  
   
   $XML->{root}{foo}->set_cdata(0) ;
-  $XML = $XML->copy() ;
   
-  skip( $XML->tree->{root}{'/nodes'}{foo} , 'cdata,0,1', 'Copy does not save set_cdata info' ) ;
-  ok( $XML->tree->{root}{foo}{CONTENT} , "bla bla bla" ) ;
+  cmp_ok( $XML->tree->{root}{'/nodes'}{foo}, 'eq', 'cdata,0,1'   ) ;
+  cmp_ok( $XML->tree->{root}{foo}{CONTENT}, 'eq', "bla bla bla" ) ;
   
   $XML->{root}{foo}->set_binary(0) ;
-  $XML = $XML->copy() ;
   
-  skip( $XML->tree->{root}{'/nodes'}{foo} , 'binary,0,1', 'Copy does not save set_binary info' ) ;
-  ok( $XML->tree->{root}{foo}{CONTENT} , "bla bla bla" ) ;
+  cmp_ok( $XML->tree->{root}{'/nodes'}{foo}, 'eq', 'binary,0,1' ) ;
+  cmp_ok( $XML->tree->{root}{foo}{CONTENT}, 'eq', "bla bla bla" ) ;
 
-  ok( ref( $XML->tree->{root}{foo} ), 'HASH' ) ; 
+  cmp_ok( ref( $XML->tree->{root}{foo} ), 'eq', 'HASH' ) ; 
   $XML->{root}{foo}->set_auto ;
-  $XML = $XML->copy() ;
 
-  ok( ref( $XML->tree->{root}{foo} ), '' ) ; 
-  ok( !exists $XML->tree->{root}{'/nodes'}{foo} ) ;
+  cmp_ok( ref( $XML->tree->{root}{foo} ), 'eq', '' ) ; 
+  isnt( exists $XML->tree->{root}{'/nodes'}{foo}, undef ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+
+subtest 'Default Parser CDATA and Bin data tests' => sub {
 
   my $XML = new XML::Smart ;
-  $XML->{root}{foo} = "bla bla bla <tag> bla bla";
   $XML = $XML->copy() ;
+  $XML->{root}{foo} = "bla bla bla <tag> bla bla";
 
   my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , '<root><foo><![CDATA[bla bla bla <tag> bla bla]]></foo></root>') ;
+  cmp_ok( $data, 'eq', '<root><foo><![CDATA[bla bla bla <tag> bla bla]]></foo></root>' ) ;
 
+
+  ## Cannot copy object between set_cdata( 1 ), set_node( 1 ), set_binary( 1 ) and unset of same.
   $XML->{root}{foo}->set_cdata(0) ;
-  $XML = $XML->copy() ;
   
   $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  skip($data , '<root><foo>bla bla bla &lt;tag&gt; bla bla</foo></root>', 'Copy does not save set_cdata info' ) ;
+  cmp_ok( $data, 'eq', '<root><foo>bla bla bla &lt;tag&gt; bla bla</foo></root>' ) ;
   
   $XML->{root}{foo}->set_binary(1) ;
-  $XML = $XML->copy() ;
   
   $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  skip($data , '<root><foo dt:dt="binary.base64">YmxhIGJsYSBibGEgPHRhZz4gYmxhIGJsYQ==</foo></root>', 'Copy does not save set_binary info' ) ;
+  cmp_ok ($data, 'eq', '<root><foo dt:dt="binary.base64">YmxhIGJsYSBibGEgPHRhZz4gYmxhIGJsYQ==</foo></root>' ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'Default Parser Funny Chars, Hex and Bin data Test' => sub {
+
 
   my $XML = new XML::Smart ;
+  $XML = $XML->copy() ;
   $XML->{root}{foo} = "<h1>test \x03</h1>";
   $XML = $XML->copy() ;
 
   my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , '<root><foo dt:dt="binary.base64">PGgxPnRlc3QgAzwvaDE+</foo></root>') ;
+  cmp_ok( $data, 'eq', '<root><foo dt:dt="binary.base64">PGgxPnRlc3QgAzwvaDE+</foo></root>' ) ;
+
+  ## Cannot copy object between set_cdata( 1 ), set_node( 1 ), set_binary( 1 ) and unset of same.
 
   $XML->{root}{foo}->set_binary(0) ;
-
+  
   $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , "<root><foo>&lt;h1&gt;test \x03\&lt;/h1&gt;</foo></root>") ;
+  cmp_ok( $data, 'eq', "<root><foo>&lt;h1&gt;test \x03\&lt;/h1&gt;</foo></root>") ;
   
   $XML->{root}{foo}->set_binary(1) ;
-  $XML = $XML->copy() ;
   
   $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , '<root><foo dt:dt="binary.base64">PGgxPnRlc3QgAzwvaDE+</foo></root>') ;
+  cmp_ok( $data, 'eq', '<root><foo dt:dt="binary.base64">PGgxPnRlc3QgAzwvaDE+</foo></root>' ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'Default Parser CDATA test' => sub {
+
 
   my $XML = new XML::Smart ;
-  $XML->{root}{foo} = "simple";
   $XML = $XML->copy() ;
+  $XML->{root}{foo} = "simple";
 
   my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , '<root foo="simple"/>') ;
+  cmp_ok( $data, 'eq', '<root foo="simple"/>' ) ;
   
   $XML->{root}{foo}->set_cdata(1) ;
-  $XML = $XML->copy() ;
 
   $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  skip($data , '<root><foo><![CDATA[simple]]></foo></root>', 'Copy does not save set_cdata info' ) ;
+  cmp_ok( $data, 'eq', '<root><foo><![CDATA[simple]]></foo></root>' ) ;
   
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'Default Parser CDATA and funny chars' => sub {
+
 
   my $XML = new XML::Smart ;
   $XML->{root}{foo} = "<words>foo bar baz</words>";
+  $XML = $XML->copy() ;
 
   my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , '<root><foo><![CDATA[<words>foo bar baz</words>]]></foo></root>') ;
-  
+  cmp_ok( $data, 'eq', '<root><foo><![CDATA[<words>foo bar baz</words>]]></foo></root>' ) ;
+
+  ## Cannot copy object between set_cdata( 1 ), set_node( 1 ), set_binary( 1 ) and unset of same.  
   $XML->{root}{foo}->set_cdata(0) ;
 
   $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , '<root><foo>&lt;words&gt;foo bar baz&lt;/words&gt;</foo></root>') ;  
+  cmp_ok( $data, 'eq', '<root><foo>&lt;words&gt;foo bar baz&lt;/words&gt;</foo></root>' ) ;  
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+
+subtest 'Default Parser' => sub {
   
   my $XML = XML::Smart->new(q`<?xml version="1.0"?>
   <root>
     <entry><b>here's</b> a <i>test</i></entry>
   </root>
   `, 'XML::Parser');
-
   $XML = $XML->copy() ;
-  my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , "<root><entry><b>here's</b> a <i>test</i></entry></root>") ;  
 
-}
+  my $data = $XML->data(nospace => 1 , noheader => 1 ) ;
+  cmp_ok( $data, 'eq', "<root><entry><b>here's</b> a <i>test</i></entry></root>") ;  
+
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'XML::Smart::Parser Path and XPath Tests' => sub {
+
 
   my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
-  $XML = $XML->{hosts} ;
   $XML = $XML->copy() ;
+  $XML = $XML->{hosts} ;
   
   my $addr = $XML->{'server'}('type','eq','suse'){'address'} ;
   
-  ok($addr->path , '/hosts/server[1]/address') ;
+  cmp_ok( $addr->path, 'eq', '/hosts/server[1]/address' ) ;
   
   my $addr0 = $XML->{'server'}('type','eq','suse'){'address'}[0] ;
   
-  ok($addr0->path , '/hosts/server[1]/address[0]') ;
-  ok($addr0->path_as_xpath , '/hosts/server[2]/address') ;
+  cmp_ok( $addr0->path , 'eq',  '/hosts/server[1]/address[0]') ;
+  cmp_ok( $addr0->path_as_xpath , 'eq',  '/hosts/server[2]/address') ;
   
   my $addr1 = $XML->{'server'}('type','eq','suse'){'address'}[1] ;
   
   my $type = $XML->{'server'}('version','>=','9'){'type'} ;
 
-  ok($type->path , '/hosts/server[2]/type') ;
+  cmp_ok($type->path , 'eq',  '/hosts/server[2]/type') ;
   
   $addr = $XML->{'server'}('version','>=','9'){'address'} ;
 
-  ok($addr->path , '/hosts/server[2]/address') ;
+  cmp_ok($addr->path , 'eq',  '/hosts/server[2]/address') ;
   
   $addr0 = $XML->{'server'}('version','>=','9'){'address'}[0] ;
 
-  ok($addr0->path , '/hosts/server[2]/address[0]') ;
-  ok($addr0->path_as_xpath , '/hosts/server[3]/@address') ;
+  cmp_ok($addr0->path , 'eq',  '/hosts/server[2]/address[0]') ;
+  cmp_ok($addr0->path_as_xpath , 'eq',  '/hosts/server[3]/@address') ;
   
   $type = $XML->{'server'}('version','>=','9'){'type'} ;
   
-  ok($type->path , '/hosts/server[2]/type') ;
-  ok($type->path_as_xpath , '/hosts/server[3]/@type') ;
+  cmp_ok($type->path , 'eq',  '/hosts/server[2]/type') ;
+  cmp_ok($type->path_as_xpath , 'eq',  '/hosts/server[3]/@type') ;
+
+  done_testing() ;
     
-}
+} ;
 #########################
-{
+
+
+
+subtest 'XML::Smart::Parser cut_root array Tests' => sub{
 
   my $XML = new XML::Smart(q`
   <root>
@@ -1044,6 +1377,7 @@ content2
   </root>
   `,'smart');
   
+  $XML = $XML->copy() ;
   $XML = $XML->cut_root ;
   $XML = $XML->copy() ;
   
@@ -1053,12 +1387,18 @@ content2
   my @frames_456 = @{ $XML->{'output'}('name','eq',456){'frames'} } ;
   my @formats_456 = map { $_->{format} } @frames_456 ;
 
-  ok( join(";", @formats_123) , 'a;b' ) ;
-  ok( join(";", @formats_456) , 'c;d' ) ;
+  cmp_ok( join(";", @formats_123) , 'eq',  'a;b' ) ;
+  cmp_ok( join(";", @formats_456) , 'eq',  'c;d' ) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+subtest 'XML::Smart::HTMLParser Tests' => sub {
   
   my $html = q`
   <html>
@@ -1069,18 +1409,25 @@ content2
   my @tag ;
 
   my $p = XML::Smart::HTMLParser->new(
-  Start => sub { shift; push(@tag , @_) ;},
-  Char => sub {},
-  End => sub {},
-  );
+      Start => sub { shift; push(@tag , @_) ;},
+      Char => sub {},
+      End => sub {},
+      );
 
   $p->parse($html) ;
+  
+  cmp_ok($tag[-1] , 'eq',  '$s->{supply}->shift') ;  
 
-  ok($tag[-1] , '$s->{supply}->shift') ;  
+  done_testing() ;
 
-}
+} ;
 #########################
-{
+
+
+
+
+
+subtest 'XML::Smart::Parser Array pop Test' => sub {
   
   my $xml = new XML::Smart(q`<?xml version="1.0" encoding="UTF-8"?>
 <doc type="test">
@@ -1091,51 +1438,71 @@ content2
 </doc>
   `);
 
+  $xml = $xml->copy() ;
   $xml->{doc}{port}[0] = 0;
   $xml->{doc}{port}[1] = 1;
+  $xml = $xml->copy() ;
   $xml->{doc}{port}[2] = 2;
   $xml->{doc}{port}[3] = 3;
   $xml = $xml->copy() ;
   
   my $data = $xml->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , q`<doc type="test"><data>test 1</data><data>test 2</data><data>test 3</data><file>file 1</file><port>0</port><port>1</port><port>2</port><port>3</port></doc>`) ;
+  cmp_ok($data, 'eq', q`<doc type="test"><data>test 1</data><data>test 2</data><data>test 3</data><file>file 1</file><port>0</port><port>1</port><port>2</port><port>3</port></doc>`) ;
   
   pop @{$xml->{doc}{'/order'}} ;
-  $xml = $xml->copy() ;
 
   $data = $xml->data(nospace => 1 , noheader => 1 ) ;
-  ok($data , q`<doc type="test"><data>test 1</data><data>test 2</data><data>test 3</data><file>file 1</file><port>0</port><port>1</port><port>2</port><port>3</port></doc>`) ;
+  cmp_ok( $data, 'eq', q`<doc type="test"><data>test 1</data><data>test 2</data><data>test 3</data><file>file 1</file><port>0</port><port>1</port><port>2</port><port>3</port></doc>`) ;
 
-}
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+
+subtest 'XML::XPath Tests' => sub {
+
   eval(q`use XML::XPath`) ;
-  if ( !$@ ) {
-    my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
-    $XML = $XML->copy() ;
-    
-    my $xp1 = $XML->XPath ;
-    my $xp2 = $XML->XPath ;
-    ok($xp1,$xp2) ;
-    
-    $xp1 = $XML->XPath ;
-    $XML->{hosts}{tmp} = 123 ;
-    $XML = $XML->copy() ;
-    $xp2 = $XML->XPath ;
-    
-   ## Test cache of the XPath object:
-    ok(1) if $xp1 != $xp2 ;
-  
-    delete $XML->{hosts}{tmp} ;
-    $XML = $XML->copy() ;
-  
-    my $data = $XML->XPath->findnodes_as_string('/') ;
-    
-    ok($data , q`<hosts><server os="linux" type="redhat" version="8.0"><address>192.168.0.1</address><address>192.168.0.2</address></server><server os="linux" type="suse" version="7.0"><address>192.168.1.10</address><address>192.168.1.20</address></server><server address="192.168.2.100" os="linux" type="conectiva" version="9.0" /><server address="192.168.3.30" os="bsd" type="freebsd" version="9.0" /></hosts>`) ;
+
+  if( $@ ) {
+      plan skip_all => 'XML::XPath Unavailable' ;
   }
-}
+  
+  my $XML = XML::Smart->new($DATA , 'XML::Smart::Parser') ;
+  $XML = $XML->copy() ;
+  
+  my $xp1 = $XML->XPath ;
+  my $xp2 = $XML->XPath ;
+  cmp_ok( $xp1, 'eq', $xp2 ) ;
+  
+  $xp1 = $XML->XPath ;
+  $XML->{hosts}{tmp} = 123 ;
+  $XML = $XML->copy() ;
+  $xp2 = $XML->XPath ;
+  
+  ## Test cache of the XPath object:
+  cmp_ok( $xp1, '!=', $xp2 ) ;
+  
+  delete $XML->{hosts}{tmp} ;
+  $XML = $XML->copy() ;
+  
+  my $data = $XML->XPath->findnodes_as_string('/') ;
+  
+  cmp_ok( $data, 'eq', q`<hosts><server os="linux" type="redhat" version="8.0"><address>192.168.0.1</address><address>192.168.0.2</address></server><server os="linux" type="suse" version="7.0"><address>192.168.1.10</address><address>192.168.1.20</address></server><server address="192.168.2.100" os="linux" type="conectiva" version="9.0" /><server address="192.168.3.30" os="bsd" type="freebsd" version="9.0" /></hosts>`) ;
+
+  done_testing() ;
+
+} ;
+
 #########################
-{
+
+
+
+subtest 'XML::Smart::DTD Tests' => sub {
 
   use XML::Smart::DTD ;
 
@@ -1161,65 +1528,77 @@ content2
 ]>
   `) ;
   
-  ok( $dtd->elem_exists('curso') ) ;
-  ok( $dtd->elem_exists('objetivo') ) ;
-  ok( $dtd->elem_exists('curriculo') ) ;
-  ok( $dtd->elem_exists('disciplina') ) ;
-  ok( $dtd->elem_exists('descricao') ) ;
-  ok( $dtd->elem_exists('requisito') ) ;  
-  ok( $dtd->elem_exists('professor') ) ;  
-  ok( $dtd->elem_exists('br') ) ;  
-  
-  ok( $dtd->is_elem_req('requisito') ) ;
-  ok( $dtd->is_elem_uniq('requisito') ) ;
-  
-  ok( $dtd->is_elem_opt('curriculo') ) ;
-  ok( !$dtd->is_elem_req('curriculo') ) ;
-  
-  ok( $dtd->is_elem_multi('professor') ) ;
-  
-  ok( $dtd->is_elem_pcdata('professor') ) ;
-  ok( $dtd->is_elem_empty('br') ) ;
 
-  ok( $dtd->attr_exists('curso','centro') ) ;
-  ok( $dtd->attr_exists('curso','nome') ) ;
+  isnt( $dtd->elem_exists('curso') , undef ) ;
+  isnt( $dtd->elem_exists('objetivo') , undef ) ;
+  isnt( $dtd->elem_exists('curriculo') , undef ) ;
+  isnt( $dtd->elem_exists('disciplina') , undef ) ;
+  isnt( $dtd->elem_exists('descricao') , undef ) ;
+  isnt( $dtd->elem_exists('requisito') , undef ) ;  
+  isnt( $dtd->elem_exists('professor') , undef ) ;  
+  isnt( $dtd->elem_exists('br') , undef ) ;  
   
-  ok( $dtd->attr_exists('curso','centro','nome') ) ;
+  isnt( $dtd->is_elem_req('requisito') , undef ) ;
+  isnt( $dtd->is_elem_uniq('requisito') , undef ) ;
   
-  ok( !$dtd->attr_exists('curso','centro','nomes') ) ;
+  isnt( $dtd->is_elem_opt('curriculo') , undef ) ;
+  isnt( !$dtd->is_elem_req('curriculo') , undef ) ;
   
-  my @attrs = $dtd->get_attrs('curso') ;
-  ok( join(" ",@attrs) , 'centro nome age') ;
+  isnt( $dtd->is_elem_multi('professor') , undef ) ;
+  
+  isnt( $dtd->is_elem_pcdata('professor') , undef ) ;
+  isnt( $dtd->is_elem_empty('br') , undef ) ;
+
+  isnt( $dtd->attr_exists('curso','centro') , undef ) ;
+  isnt( $dtd->attr_exists('curso','nome') , undef ) ;
+  
+  isnt( $dtd->attr_exists('curso','centro','nome') , undef ) ;
+  
+  is( $dtd->attr_exists('curso','centro','nomes'), undef ) ;
+  
+  my @attrs = $dtd->get_attrs('curso', undef ) ;
+  cmp_ok( join(" ",@attrs), 'eq', 'centro nome age' ) ;
   
   @attrs = $dtd->get_attrs_req('curso') ;
-  ok( join(" ",@attrs) , 'centro nome') ;
+  cmp_ok( join(" ",@attrs) , 'eq', 'centro nome') ;
+
+  done_testing() ;
   
-}
+} ;
 #########################
-{
+
+
+
+
+
+
+subtest 'Default Parser cds Tests' => sub {
 
   my $xml = XML::Smart->new()->{cds} ;
+  $xml = $xml->copy() ;
   
+
+  # Cannot copy object and expect previous state to remain ! 
   $xml->{album}[0] = {
-  title => 'foo' ,
-  artist => 'the foos' ,
-  tracks => 8 ,
+      title => 'foo' ,
+      artist => 'the foos' ,
+      tracks => 8 ,
   } ;
   
   $xml->{album}[1] = {
-  title => 'bar' ,
-  artist => 'the barss' ,
-  tracks => [qw(6 7)] ,
-  time => [qw(60 70)] ,
-  type => 'b' ,
+      title => 'bar' ,
+      artist => 'the barss' ,
+      tracks => [qw(6 7)] ,
+      time => [qw(60 70)] ,
+      type => 'b' ,
   } ;
-  
+
   $xml->{album}[2] = {
-  title => 'baz' ,
-  artist => undef ,
-  tracks => 10 ,
-  type => '' ,
-  br => 123 ,
+      title => 'baz' ,
+      artist => undef ,
+      tracks => 10 ,
+      type => '' ,
+      br => 123 ,
   } ;
   
   $xml->{creator} = 'Joe' ;
@@ -1227,9 +1606,8 @@ content2
   $xml->{type} = 'a' ;
   
   $xml->{album}[0]{title}->set_node(1);
-  $xml = $xml->copy() ;
-
-  ok( $xml->data( noheader=>1 , nospace=>1) , q`<cds creator="Joe" date="2000-01-01" type="a"><album artist="the foos" tracks="8"><title>foo</title></album><album artist="the barss" title="bar" type="b"><time>60</time><time>70</time><tracks>6</tracks><tracks>7</tracks></album><album artist="" br="123" title="baz" tracks="10" type=""/></cds>`) ;
+  
+  cmp_ok( $xml->data( noheader=>1 , nospace=>1), 'eq', q`<cds creator="Joe" date="2000-01-01" type="a"><album artist="the foos" tracks="8"><title>foo</title></album><album artist="the barss" title="bar" type="b"><time>60</time><time>70</time><tracks>6</tracks><tracks>7</tracks></album><album artist="" br="123" title="baz" tracks="10" type=""/></cds>`) ;
   
   $xml->apply_dtd(q`
 <!DOCTYPE cds [
@@ -1251,7 +1629,7 @@ content2
 ]>
   `);
   
-  skip( $xml->data(noheader=>1 , nospace=>1) , q`<!DOCTYPE cds [
+  cmp_ok( $xml->data(noheader=>1 , nospace=>1), 'eq', q`<!DOCTYPE cds [
 <!ELEMENT cds (album+)>
 <!ELEMENT album (artist , tracks+ , time? , auto , br?)>
 <!ELEMENT artist (#PCDATA)>
@@ -1267,13 +1645,24 @@ content2
           title     CDATA #REQUIRED
           type     (a|b|c) #REQUIRED "a"
 >
-]><cds creator="Joe" date="2000-01-01" type="a"><album title="foo" type="a"><artist>the foos</artist><tracks>8</tracks><auto></auto></album><album title="bar" type="b"><artist>the barss</artist><tracks>6</tracks><tracks>7</tracks><time>60</time><auto></auto></album><album title="baz" type="a"><artist></artist><tracks>10</tracks><auto></auto><br/></album></cds>`, 'DTD and copy do not work together' );
+]><cds creator="Joe" date="2000-01-01" type="a"><album title="foo" type="a"><artist>the foos</artist><tracks>8</tracks><auto></auto></album><album title="bar" type="b"><artist>the barss</artist><tracks>6</tracks><tracks>7</tracks><time>60</time><auto></auto></album><album title="baz" type="a"><artist></artist><tracks>10</tracks><auto></auto><br/></album></cds>` );
 
-}
+
+  done_testing() ;
+
+} ;
 #########################
-{
+
+
+
+
+
+
+
+subtest 'Default Parser apply_dtd Tests' => sub {
   
   my $xml = XML::Smart->new;
+  $xml = $xml->copy() ;
   $xml->{customer}{phone} = "555-1234";
   $xml->{customer}{phone}{type} = "home";
   $xml = $xml->copy() ;
@@ -1289,11 +1678,53 @@ content2
   `);
   $xml = $xml->copy() ;
   
-  ok( $xml->data(noheader=>1 , nospace=>1 , nodtd=>1) , q`<customer><phone type="home">555-1234</phone></customer>` );
+  cmp_ok( $xml->data(noheader=>1 , nospace=>1 , nodtd=>1), 'eq', q`<customer><phone type="home">555-1234</phone></customer>` );
 
-}
+  done_testing() ;
 
-1 ;
+} ;
+#########################
+
+
+
+
+
+
+
+
+subtest 'URL Tests' => sub {
+
+
+    eval(q`use LWP::UserAgent`) ;
+
+    if ( $@ ) {
+	plan skip_all => 'URL Tests require LWP::UserAgent' ;
+	done_testing() ;
+    }
+
+    if( !$ENV{ URL_TESTS } ) { 
+	plan skip_all => 'Skipping URL test, Enable by setting ENV variable URL_TESTS' ;
+	done_testing() ;
+    }
+
+    my $url = 'http://www.perlmonks.org/index.pl?node_id=16046' ;
+	    
+    diag( "\nGetting URL... " ) ;
+    
+    my $XML = XML::Smart->new($url , 'XML::Smart::Parser') ;
+    $XML = $XML->copy() ;
+    
+    cmp_ok( $XML->{XPINFO}{INFO}{sitename}, 'eq', 'PerlMonks' ) ;
+    
+    done_testing() ;
+    
+} ;
+
+#########################
+
+done_testing() ;
+
+exit() ;
 
 
 

@@ -36,11 +36,11 @@ XML::Smart - A smart, easy and powerful way to access or create XML from fiels, 
 
 =head1 VERSION
 
-Version 1.76
+Version 1.77
 
 =cut
 
-our $VERSION = '1.76' ;
+our $VERSION = '1.77' ;
 
 
 =head1 SYNOPSIS
@@ -2522,6 +2522,7 @@ key. So this actually returns another object, pointhing (inside it) to the key:
   * DTD - Handle <!DOCTYPE> gracefully.
   * Implement a better way to declare meta tags.
   * Add 0x80, 0x81, 0x8d, 0x8f, 0x90, 0xa0 ( multi byte characters to the list of accepted binary characters )
+  * Ensure object copy holds more in state including: ->data( wild => 1 ) 
 
 
 

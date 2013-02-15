@@ -670,6 +670,11 @@ subtest 'XML::Smart::Parser Data populate test' => sub {
 
 subtest 'XML::Smart::Parser Data Populate Array test' => sub {
 
+
+  if( $] > 5.016 ) { 
+      plan skip_all => "Skip on $]" ;
+  }
+
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
   $XML = $XML->copy() ;
   

@@ -128,7 +128,7 @@ sub compile {
 sub parse {
     my $this = shift ;
 
-    
+
     @parsed = () ;
 
     init();

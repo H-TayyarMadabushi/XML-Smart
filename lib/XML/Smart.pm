@@ -30,6 +30,7 @@ use vars qw(@ISA)                                              ;
 use XML::Smart::Tie                                            ;
 use XML::Smart::Tree                                           ;
 
+
 =head1 NAME
 
 XML::Smart - A smart, easy and powerful way to access or create XML from fiels, data and URLs.
@@ -228,6 +229,17 @@ sub new {
 	code      => \&find_arg , 
 	) ;
 
+
+    { 
+	no warnings   ;
+	my %args = @_ ;
+	
+	if( $args{ use_lt_clean } ) { 
+	    $$this->{ use_lt_clean } = 1 ;
+	}
+
+    }
+
     $$this->{ parser } = $parser ;
 
     $parser = &XML::Smart::Tree::load($parser) ;
@@ -276,7 +288,7 @@ sub clone {
     
   my $clone = Object::MultiType->new(
       boolsub   => \&boolean ,
-  scalarsub => \&content ,
+      scalarsub => \&content ,
       tiearray  => 'XML::Smart::Tie::Array' ,
       tiehash   => 'XML::Smart::Tie::Hash' ,
       tieonuse  => 1 ,

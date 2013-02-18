@@ -20,6 +20,7 @@ use Carp                                                       ;
 use XML::Smart::Entity qw(_parse_basic_entity)                 ;
 use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
+
 our ($VERSION) ;
 $VERSION = '1.32' ;
 
@@ -96,9 +97,10 @@ sub load_XML_Smart_HTMLParser {
 ########
 
 sub load {
+
   my ( $parser ) = @_ ;
   my $module ;
-  
+
   my $DEFAULT_LOADED  ;
 
   if ($parser) {
@@ -165,7 +167,7 @@ sub parse {
   }
   
   if ($data !~ /<.*?>/s) { return( {} ) ;}
-  
+
   if (!$module || !$PARSERS{$module}) {
     if    ( !$NO_XML_PARSER && $INC{'XML/Parser.pm'} && $PARSERS{XML_Parser}) { $module = 'XML_Parser' ;}
     elsif ($PARSERS{XML_Smart_Parser}) { $module = 'XML_Smart_Parser' ;}
@@ -194,7 +196,11 @@ sub parse {
   if ( $args{no_nodes} ) { $xml->{SMART}{no_nodes} = 1 ;}
   
   if ( $args{use_spaces} ) { $xml->{SMART}{use_spaces} = 1 ;}
-  
+
+  if ( $args{use_lt_clean} ) { 
+      $data = _clean_data_with_lt( $data ) ;
+  }
+
   $xml->{SMART}{on_start} = $args{on_start} if ref($args{on_start}) eq 'CODE' ;
   $xml->{SMART}{on_char}  = $args{on_char}  if ref($args{on_char})  eq 'CODE' ;
   $xml->{SMART}{on_end}   = $args{on_end}   if ref($args{on_end})   eq 'CODE' ;
@@ -218,7 +224,65 @@ sub parse {
 # GET_URL #
 ###########
 
+
+sub _clean_data_with_lt { 
+
+    my $data = shift ;
+
+    my $original_data = $data ;
+    $original_data =~ s/(<[<]+)/multiple_smart_html_encode( $+[0] $-[0] )/g;
+
+    $data =~ s/<!\[CDATA\[.*?\]\]>//gs ;
+    $data =~ s/<[<]+//g;
+
+    my @chunks = split( /</, $data ) ;
+
+    my $xml_started = 0  ;
+    my $previous_chunk   ;
+    my %replace_blocks   ;
+    foreach my $chunk ( @chunks ) { 
+	my $chunk_for_process = $chunk ;
+	$chunk_for_process =~ s/[\s\n]+//g;
+	unless( $chunk_for_process or $xml_started ) { 
+	    $xml_started = 1           ;
+	    next                       ;
+	}
+	
+	unless( defined( $previous_chunk ) ) { 
+	    $previous_chunk = $chunk_for_process ;
+	    $previous_chunk =~ s/[\s\n]+//g;
+	    next ;
+	}
+
+	if( $previous_chunk =~ />$/ or $chunk_for_process =~ />$/ ) { 
+	    $previous_chunk = $chunk_for_process ;
+	    $previous_chunk =~ s/[\s\n]+//g;
+	    next ;
+	} else { 
+	    $replace_blocks{ $chunk } = 'smart_html_encode( &lt; )' . $chunk ;
+	    $previous_chunk = $chunk_for_process ;
+	    $previous_chunk =~ s/[\s\n]+//g;
+	    next ;
+	}
+
+	craok( 'Critical error - failed to clean xml with potential <' ) ;
+
+    }
+
+    foreach my $replace_chunk ( keys %replace_blocks ) { 
+	$replace_chunk = '<' . $replace_chunk ;
+	my $tmp = substr( $original_data, ( index( $original_data, $replace_chunk )  ), 1, 'smart_html_encode( &lt; )') 
+    }
+
+
+    return $original_data;
+
+}
+
+
+
 sub get_url {
+    
   my ( $url ) = @_ ;
   my $data ;
   

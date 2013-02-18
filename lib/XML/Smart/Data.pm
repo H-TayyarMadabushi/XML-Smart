@@ -36,9 +36,7 @@ our @EXPORT_OK = @EXPORT ;
 sub data {
   _unset_sig_warn() ;
   my $this = shift ;
-
   my ( %args ) = @_ ;
-  
   my $tree ;
   if( $args{tree} ) { 
       $tree = $args{ tree } ;
@@ -144,6 +142,11 @@ sub data {
     $dtd =~ s/\s*$// ;
     $dtd = "\n$dtd" if $dtd ne '' && !$args{nospace} ;
   }
+
+  
+  if( $$this->{ use_lt_clean } ) { 
+      $data = _replace_data_with_lt( $data ) ;
+  }
   
   $data = $xml . $metagen . $meta . $dtd . $data ;
   
@@ -156,6 +159,44 @@ sub data {
   _reset_sig_warn() ;
   return($data) ;
 }
+
+
+sub _replace_data_with_lt { 
+
+    my $data = shift ;
+
+    while( my $index_of_smart_html_encode = index( $data, 'smart_html_encode( &lt; )'  ) ) { 
+	last if( $index_of_smart_html_encode == -1 ) ;
+	my $tmp = substr( $data                                  , 
+			  $index_of_smart_html_encode            ,
+			  length( 'smart_html_encode( &lt; )' )  ,  
+			  '<' 
+	      ) ;
+    }
+
+    while( my $index_of_multiple_smart_html_encode = index( $data, 'multiple_smart_html_encode('  ) ) { 
+	last if( $index_of_multiple_smart_html_encode == -1 ) ;
+	my $check_string = substr( $data, $index_of_multiple_smart_html_encode ) ;
+	if( $check_string =~ /multiple_smart_html_encode\((.*?)\).*/ ) { 
+	    my $params = $1 ;
+	    my $len    = length( $params ) ;
+	    $params =~ s/^\s+//g;
+	    $params =~ s/\s+$//g;
+	    my ( $from, $to ) = split( /\s/, $params ) ;
+	    my $number_of_lt  = $from - $to ;
+	    my $tmp = substr( $data, 
+			      $index_of_multiple_smart_html_encode, 
+			      length( 'multiple_smart_html_encode(' ) + $len + 1 , 
+			      '<' x $number_of_lt );
+	}
+
+    }
+
+    return $data ;
+    
+}
+    
+
 
 #################
 # IS_VALID_TREE #
@@ -392,7 +433,7 @@ sub _data {
       substr($tags , $po , $p1) = $cont ;
     }
     
-    # print STDERR "***$tag>> $args,$args_end,$tags,$cont,$stat_1 [@all_keys]\n" ;
+    ## print STDERR "***$tag>> $args,$args_end,$tags,$cont,$stat_1 [@all_keys]\n" ;
 
     if ($args_end ne '') {
       $args .= $args_end ;
@@ -530,6 +571,7 @@ sub _data {
     _reset_sig_warn() ;
     return $return_val ;
   }
+
 
   delete $$parsed{"$tree"} if ref($tree) ;
   _reset_sig_warn() ;

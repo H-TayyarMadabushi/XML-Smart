@@ -229,53 +229,59 @@ sub _clean_data_with_lt {
 
     my $data = shift ;
 
-    my $original_data = $data ;
-    $original_data =~ s/(<[<]+)/multiple_smart_html_encode( $+[0] $-[0] )/g;
+    my @data = split( //, $data ) ;
+    my $data_len = @data          ;
+    
+    my $in_cdata_block   =  0 ;
+    my $index_of_pref_lt = -1 ;
+    for( my $index = 0; $index < $data_len; $index++ ) { 
 
-    $data =~ s/<!\[CDATA\[.*?\]\]>//gs ;
-    $data =~ s/<[<]+//g;
-
-    my @chunks = split( /</, $data ) ;
-
-    my $xml_started = 0  ;
-    my $previous_chunk   ;
-    my %replace_blocks   ;
-    foreach my $chunk ( @chunks ) { 
-	my $chunk_for_process = $chunk ;
-	$chunk_for_process =~ s/[\s\n]+//g;
-	unless( $chunk_for_process or $xml_started ) { 
-	    $xml_started = 1           ;
-	    next                       ;
-	}
+	if( $data[ $index ] eq '<' ) { 
 	
-	unless( defined( $previous_chunk ) ) { 
-	    $previous_chunk = $chunk_for_process ;
-	    $previous_chunk =~ s/[\s\n]+//g;
-	    next ;
-	}
+	    next if( $in_cdata_block ) ;
 
-	if( $previous_chunk =~ />$/ or $chunk_for_process =~ />$/ ) { 
-	    $previous_chunk = $chunk_for_process ;
-	    $previous_chunk =~ s/[\s\n]+//g;
-	    next ;
-	} else { 
-	    $replace_blocks{ $chunk } = 'smart_html_encode( &lt; )' . $chunk ;
-	    $previous_chunk = $chunk_for_process ;
-	    $previous_chunk =~ s/[\s\n]+//g;
-	    next ;
-	}
+	    my $possible_cdata_block = join( '', @data[ $index .. ( $index + 8 ) ] ) ;
+	    if( $possible_cdata_block eq '<![CDATA[' ) { 
+		$in_cdata_block = 1 ;
+		next ;
+	    }
 
-	craok( 'Critical error - failed to clean xml with potential <' ) ;
+	    if( $index_of_pref_lt == -1 ) { 
+		$index_of_pref_lt = $index ;
+		next                       ;
+	    } else { 
+		$data[ $index_of_pref_lt ] = 'smart_html_encode( &lt; )' ;
+		$index_of_pref_lt = $index ;
+		next                       ;
+	    }
+	} elsif( $data[ $index ] eq '>' ) { 
+
+	    if( $in_cdata_block ) { 
+		
+		my $possible_cdata_close = join( '', @data[ ( $index - 2 ) .. $index ] ) ;
+		if( $possible_cdata_close eq ']]>' ) {
+		    $in_cdata_block = 0 ;
+		    next                ;
+		}
+		
+		next ;
+	    }
+
+
+	    if( $index_of_pref_lt == -1 ) { 
+		warn "Input XML seems to have errors!\n";
+	    } else { 
+		$index_of_pref_lt =  -1;
+
+	    }
+
+	}
 
     }
 
-    foreach my $replace_chunk ( keys %replace_blocks ) { 
-	$replace_chunk = '<' . $replace_chunk ;
-	my $tmp = substr( $original_data, ( index( $original_data, $replace_chunk )  ), 1, 'smart_html_encode( &lt; )') 
-    }
+    $data = join( '', @data ) ;
 
-
-    return $original_data;
+    return $data;
 
 }
 

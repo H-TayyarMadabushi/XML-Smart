@@ -1,7 +1,7 @@
-use 5.006;
-use strict;
-use warnings FATAL => 'all';
-use ExtUtils::MakeMaker;
+use 5.006                   ;
+use strict                  ;
+use warnings FATAL => 'all' ;
+use ExtUtils::MakeMaker     ;
 
 WriteMakefile(
     NAME             => 'XML::Smart'       ,

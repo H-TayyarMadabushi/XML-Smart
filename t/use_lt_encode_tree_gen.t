@@ -5,6 +5,12 @@ use Test::More            ;
 
 use XML::Smart            ;
 
+use Data::Dump qw( dump ) ;
+BEGIN { 
+    print STDERR "use_lt_encode_tree_gen.t contains debug code" ;
+}
+
+
 subtest 'use_lt_clean Test - Maintain Space' => sub {
     
     my $xml_input = '

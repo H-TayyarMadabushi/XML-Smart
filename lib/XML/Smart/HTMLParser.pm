@@ -18,6 +18,10 @@ use strict                                                     ;
 use warnings                                                   ;
 
 use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
+use Data::Dump qw( dump ) ;
+BEGIN { 
+    print STDERR "HTMLParser.pm has debug code.\n";
+}
 
 our ($VERSION , @ISA) ;
 $VERSION = '1.11' ;
@@ -60,6 +64,7 @@ sub setHandlers {
   $this->{Final} = $args{Final} || sub{} ;
   
   return( 1 ) ;
+
 }
 
 #########
@@ -67,97 +72,105 @@ sub setHandlers {
 #########
 
 sub parse {
-  my $this = shift ;
-  my $data = shift ;
-  
-  $data =~ s/\r\n?/\n/gs ;
-  
-  $data =~ s/^\s*<\?xml.*?>//gsi ;
-  
-  my @parsed ;
-  
-  while( $data =~ /(.*?)<(.*?)>/gsi ) {
-    my $cont = $1 ;
-    my $markup = $2 ;
-    
-    my ($more_q , @args) = &parse_tag($markup) ;
-    
-    while ($more_q) {
-      my $more ;
-      ($more) = ( $data =~ /\G(.*?)>/s ) ;
-      pos($data) += length($more) + 1 ;
-      $markup = $markup.'>'.$more ;
-      ($more_q , @args) = &parse_tag($markup) ;
-    }
-    
-    if ($cont =~ /\S/s) { push(@parsed , 'Char' , $cont) ;}
-    
-    if ($args[0] =~ /^\/(.*)/) { push(@parsed , 'End' , $1) ;}
-    elsif ($args[-1] =~ /^\/$/) {
-      pop @args ;
-      push(@parsed , 'StartEnd' , [@args]) ;
-    }
-    else { push(@parsed , 'Start' , [@args]) ;}
-  }
-  
-  {
-  
-    my (%close,@close,%open) ;
-    for(my $i=$#parsed-1 ; $i >= 0 ; $i-=2) {
-      my $type = $parsed[$i] ;
-      
-      if ($type eq 'End') {
-        my $tag = $parsed[$i+1] ;
-        $close{lc($tag)}++ ;
-        push(@close , $i) ;
-      }
-      elsif ($type eq 'Start') {
-        my $tag = @{$parsed[$i+1]}[0] ;
-        
-        if (!$close{lc($tag)}) {
-          if (@{$parsed[$i+1]}[-1] eq '/' && $#{$parsed[$i+1]} % 2 ) {
-            pop @{$parsed[$i+1]} ;
-            $parsed[$i] = 'StartEnd' ;
-          }
-          elsif ($parsed[$i+2] ne 'Char') { $parsed[$i] = 'StartEnd' ;}
-          else {
-	      push( @{ $open{$close[-1]} }  , 'End' , $tag) ;
-          }
-        }
-        else {
-          $close{lc($tag)}-- ;
-          pop(@close) ;
-        }
-      }
-    }
-    
-    if ( %open ) {
-      my @parsed2 ;
-      for(my $i=0 ; $i <= $#parsed ; ++$i) {
-        push(@parsed2 , @{$open{$i}}) if $open{$i} ;
-        push(@parsed2 , $parsed[$i]) ;
-      }
-      @parsed = @parsed2 ;
-    }
 
-  }
-
-  &{$this->{Init}}($this) ;
-  
-  for (my $i = 0 ; $i <= $#parsed ; $i+=2) {
-    my $type = $parsed[$i] ;
-    my $args = $parsed[$i+1] ;
+    my $this = shift ;
+    my $data = shift ;
     
-    if    ($type eq 'Start') { &{$this->{Start}}( $this , ref($args) ? @{$args} : $args )  ;}
-    elsif ($type eq 'Char') { &{$this->{Char}}( $this , ref($args) ? @{$args} : $args )  ;}
-    elsif ($type eq 'End') { &{$this->{End}}( $this , ref($args) ? @{$args} : $args )  ;}
-    elsif ($type eq 'StartEnd') {
-      &{$this->{Start}}( $this , ref($args) ? @{$args} : $args ) ;
-      &{$this->{End}}( $this , ref($args) ? @{$args}[0] : $args ) ;
+    $data =~ s/\r\n?/\n/gs ;
+    
+    $data =~ s/^\s*<\?xml.*?>//gsi ;
+    
+    my @parsed ;
+    
+    while( $data =~ /(.*?)<(.*?)>/gsi ) {
+
+	my $cont = $1 ;
+	my $markup = $2 ;
+	
+	my ( $more_q , @args ) = &parse_tag( $markup ) ;
+	
+	while( $more_q ) {
+	    my $more ;
+	    ( $more ) = ( $data =~ /\G(.*?)>/s ) ;
+	    pos( $data ) += length( $more ) + 1 ;
+	    $markup = $markup.'>'.$more ;
+	    ( $more_q , @args ) = &parse_tag( $markup ) ;
+	}
+	
+	if( $cont =~ /\S/s ) { 
+	    push( @parsed , 'Char' , $cont ) ;
+	}
+	
+	if( $args[0] =~ /^\/(.*)/ ) { 
+	    push( @parsed , 'End'      , $1      ) ;
+	} elsif( $args[-1] =~ /^\/$/ ) {
+	    pop @args ;
+	    push( @parsed , 'StartEnd' , [@args] ) ;
+	} else { 
+	    push( @parsed , 'Start'    , [@args] ) ;
+	}
     }
-  }
-  
-  return &{$this->{Final}}($this) ;
+    
+    {
+	
+	my ( %close, @close, %open ) ;
+
+	for( my $i = ( $#parsed-1 ); $i >= 0; $i-=2 ) {
+
+	    my $type = $parsed[$i] ;
+	    
+	    if( $type eq 'End' ) {
+		my $tag = $parsed[ $i+1 ] ;
+		$close{ lc( $tag ) }++    ;
+		push( @close , $i )       ;
+	    } elsif ( $type eq 'Start' ) {
+
+		my $tag = @{ $parsed[$i+1] }[0] ;
+		
+		if( !$close{lc($tag)} ) {
+		    if( @{$parsed[$i+1]}[-1] eq '/' && $#{$parsed[$i+1]} % 2 ) {
+			pop @{$parsed[$i+1]}     ;
+			$parsed[$i] = 'StartEnd' ;
+		    } elsif( $parsed[$i+2] ne 'Char') { 
+			$parsed[$i] = 'StartEnd' ;
+		    } else {
+			push( @{ $open{$close[-1]} }  , 'End' , $tag ) ;
+		    }
+		} else {
+		    $close{lc($tag)}-- ;
+		    pop(@close)        ;
+		}
+	    }
+	}
+	
+	if ( %open ) {
+	    my @parsed2 ;
+	    for( my $i=0 ; $i <= $#parsed ; ++$i ) {
+		push( @parsed2, @{$open{ $i } } ) if $open{ $i } ;
+		push( @parsed2, $parsed[ $i ]   )                ;
+	    }
+	    @parsed = @parsed2 ;
+	}
+	
+    }
+    
+    &{$this->{Init}}($this) ;
+    
+    for( my $i = 0 ; $i <= $#parsed ; $i+=2 ) {
+	my $type = $parsed[ $i   ] ;
+	my $args = $parsed[ $i+1 ] ;
+	
+	if    ($type eq 'Start'   ) { &{$this->{Start}}( $this , ref($args) ? @{$args} : $args )  ;}
+	elsif ($type eq 'Char'    ) { &{$this->{Char}}(  $this , ref($args) ? @{$args} : $args )  ;}
+	elsif ($type eq 'End'     ) { &{$this->{End}}(   $this , ref($args) ? @{$args} : $args )  ;}
+	elsif ($type eq 'StartEnd') {
+	    &{$this->{Start}}( $this , ref($args) ? @{$args} : $args ) ;
+	    &{$this->{End}}( $this , ref($args) ? @{$args}[0] : $args ) ;
+	}
+    }
+    
+    return &{$this->{Final}}($this) ;
+
 }
 
 #############

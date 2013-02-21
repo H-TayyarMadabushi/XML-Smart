@@ -5,6 +5,35 @@ use Test::More            ;
 
 use XML::Smart            ;
 
+
+subtest 'use_lt_clean HTMLParser Test' => sub { 
+
+    $XML = XML::Smart->new(
+	q`
+  <html><title>TITLE</title>
+  <body bgcolor='#000000'>
+    <foo1 baz="y1=name\" bar1=x1 > end" w=q>
+    <foo2 bar2="" arg0 x=y>FOO2-DATA</foo2>
+    <foo3 bar3=x3>
+    <foo4 url=http://www.com/dir/file.x?query=value&x=y>
+  </body>
+  </html>
+  ` , 
+	'HTML'            , 	
+	use_lt_clean => 1 
+	) ;
+  
+  $data = $XML->data(noheader => 1 , nospace => 1 ) ;
+  cmp_ok($data, 'eq', q`<html><title>TITLE</title><body bgcolor="#000000"><foo1 baz='y1=name\" bar1=x1 &gt; end' w="q"/><foo2 bar2="" arg0="" x="y">FOO2-DATA</foo2><foo3 bar3="x3"/><foo4 url="http://www.com/dir/file.x?query=value&amp;x=y"/></body></html>`) ;
+
+  done_testing() ;
+
+} ;
+
+done_testing() ;
+
+exit() ;
+
 subtest 'use_lt_clean Test - Maintain Space' => sub {
     
     my $xml_input = '
@@ -12,7 +41,7 @@ subtest 'use_lt_clean Test - Maintain Space' => sub {
  <begin>
 You must be < 18.
 </begin>
-<end> <rand> as<df </rand>
+<end> <rand> as<<<<df </rand>
 <![CDATA[bla bla bla <tag> bla bla]]>
 </end>
 <other>
@@ -36,12 +65,9 @@ blah  blah (<)
     $data =~ s/\s+/ /gs;
     $data =~ s/>\s+</></g;
     
-    $xml_input =~ s/\n//gs;
-    $xml_input =~ s/\s+/ /gs;
-    $xml_input =~ s/>\s+</></g;
-    
-    
-    cmp_ok( $data, 'eq', $xml_input ) ;
+    my $expected = '<sample><begin>You must be &lt; 18.</begin><end><rand> as&lt;&lt;&lt;&lt;df </rand><![CDATA[bla bla bla <tag> bla bla]]></end><other>blah blah (&lt;)</other></sample>';
+
+    cmp_ok( $data, 'eq', $expected ) ;
     
     done_testing() ;
 
@@ -77,13 +103,10 @@ blah < blah ()
     $data =~ s/\n//gs;
     $data =~ s/\s+/ /gs;
     $data =~ s/>\s+</></g;
+
+    my $expected = '<sample><begin>You must be &lt; 18.</begin><end><rand> as&lt;&lt;df </rand><![CDATA[bla bla bla <tag> bla bla]]></end><other>blah &lt; blah ()</other></sample>' ;
     
-    $xml_input =~ s/\n//gs;
-    $xml_input =~ s/\s+/ /gs;
-    $xml_input =~ s/>\s+</></g;
-    
-    
-    cmp_ok( $data, 'eq', $xml_input ) ;
+    cmp_ok( $data, 'eq', $expected ) ;
     
     done_testing() ;
 
@@ -158,15 +181,16 @@ blah < blah ()
     $data =~ s/\s+/ /gs;
     $data =~ s/>\s+</></g;
     
-    $xml_input =~ s/\n//gs;
-    $xml_input =~ s/\s+/ /gs;
-    $xml_input =~ s/>\s+</></g;
-    
-    
-    cmp_ok( $data, 'eq', $xml_input ) ;
+    my $expected = '<sample><begin>You must be &lt; 18 and your bro &lt;needs to be &lt; 18.</begin><end><![CDATA[bla bla bla <tag> asdf<tag><tag> bla bla]]></end><other>blah &lt; blah ()&lt;</other></sample>' ;
+
+    cmp_ok( $data, 'eq', $expected ) ;
     
     done_testing() ;
 
 } ;
 
+
 done_testing() ;
+
+exit() ;
+

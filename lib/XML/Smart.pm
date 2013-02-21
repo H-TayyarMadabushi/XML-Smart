@@ -49,7 +49,6 @@ Version 1.77
 
 our $VERSION = '1.77' ;
 
-
 =head1 SYNOPSIS
 
 This module provides an easy way to access/create XML data. It's based on a HASH

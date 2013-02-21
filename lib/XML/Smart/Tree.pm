@@ -232,49 +232,105 @@ sub _clean_data_with_lt {
     my @data = split( //, $data ) ;
     my $data_len = @data          ;
     
-    my $in_cdata_block   =  0 ;
-    my $index_of_pref_lt = -1 ;
-    for( my $index = 0; $index < $data_len; $index++ ) { 
+
+    # State Machine Definition: 
+
+    my %state_machine = 
+	(
+	 'in_cdata_block'            =>  0 ,
+	 'seen_some_tag'             =>  0 ,
+	 'need_to_cdata_this'        =>  0 ,
+	 'prev_lt'                   => -1 ,
+	 'last_tag_start'            => -1 ,
+	 'last_tag_close'            => -1 ,
+	 'tag_balance'               =>  0 ,
+	);
+	  
+
+    CHAR: for( my $index = 0; $index < $data_len; $index++ ) { 
+
+	{ 
+	    no warnings ;
+	    next CHAR unless( $data[ $index ] eq '<' or $data[ $index ] eq '>' ) ;
+	}
 
 	if( $data[ $index ] eq '<' ) { 
-	
-	    next if( $in_cdata_block ) ;
 
-	    my $possible_cdata_block = join( '', @data[ $index .. ( $index + 8 ) ] ) ;
-	    if( $possible_cdata_block eq '<![CDATA[' ) { 
-		$in_cdata_block = 1 ;
-		next ;
+	    next CHAR if( $state_machine{ 'in_cdata_block' } ) ;
+	    
+	    { 
+		# Check for possibility of this being a cdata block
+		my $possible_cdata_block = join( '', @data[ $index .. ( $index + 8 ) ] ) ;
+		if( $possible_cdata_block eq '<![CDATA[' ) { 
+		    $state_machine{ 'in_cdata_block' } = 1 ;
+		    next CHAR                              ;
+		}
+		
 	    }
 
-	    if( $index_of_pref_lt == -1 ) { 
-		$index_of_pref_lt = $index ;
-		next                       ;
-	    } else { 
-		$data[ $index_of_pref_lt ] = 'smart_html_encode( &lt; )' ;
-		$index_of_pref_lt = $index ;
-		next                       ;
+	    $state_machine{ 'tag_balance'    }++ ;
+	    $state_machine{ 'prev_lt' } = $index ;
+	    
+	    next CHAR if( $state_machine{ 'need_to_cdata_this' } ) ;
+	    	    
+	    unless( $state_machine{ 'seen_some_tag' } ) { 
+		$state_machine{ 'seen_some_tag' }  = 1      ;
+		$state_machine{ 'last_tag_start' } = $index ;
+		next CHAR                                   ;
+	    } 
+	    
+	    if( $state_machine{ 'tag_balance' } == 1 ) { 
+		$state_machine{ 'last_tag_start' } = $index ;
+		next CHAR ;
 	    }
+
+	    $state_machine{ 'need_to_cdata_this' } = 1 ;
+
+	    ## Seen a < and 
+	    #    1. We are not in a CDATA block
+	    #    2. This is not the start of a CDATA block
+
+
 	} elsif( $data[ $index ] eq '>' ) { 
 
-	    if( $in_cdata_block ) { 
+
+	    if( $state_machine{ 'in_cdata_block' } ) { 
 		
 		my $possible_cdata_close = join( '', @data[ ( $index - 2 ) .. $index ] ) ;
 		if( $possible_cdata_close eq ']]>' ) {
-		    $in_cdata_block = 0 ;
-		    next                ;
+		    $state_machine{ 'in_cdata_block' } = 0 ;
+		    $state_machine{ 'tag_balance'    } = 0 ;
+		    next CHAR                              ;
 		}
 		
-		next ;
+		next CHAR ;
+	    }
+	    
+	    unless( $state_machine{ 'seen_some_tag' } ) { 
+		croak " > found before < - Input XML seems to have errors!\n";
 	    }
 
 
-	    if( $index_of_pref_lt == -1 ) { 
-		warn "Input XML seems to have errors!\n";
-	    } else { 
-		$index_of_pref_lt =  -1;
+	    $state_machine{ 'tag_balance' }-- ;
+	    
+	    unless( $state_machine{ 'tag_balance' } ) { 
+		$state_machine{ 'last_tag_close' } = $index ;
+		next CHAR                                   ;
+	    }		
+	    
 
-	    }
+	    ## Need to add CDATA now.
 
+	    my $last_tag_close = $state_machine{ 'last_tag_close' } ;
+	    my $prev_lt        = $state_machine{ 'prev_lt'        } ;
+	    $data[ $last_tag_close ] = '><![CDATA[' ;
+	    $data[ $prev_lt        ] = ']]><'       ;
+
+	    $state_machine{ 'last_tag_close'     } = $index ;
+	    $state_machine{ 'need_to_cdata_this' } = 0      ;
+
+	    $state_machine{ 'tag_balance'        } = 0      ;
+	    
 	}
 
     }

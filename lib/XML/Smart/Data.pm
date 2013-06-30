@@ -144,10 +144,6 @@ sub data {
   }
 
   
-  if( $$this->{ use_lt_clean } ) { 
-      $data = _replace_data_with_lt( $data ) ;
-  }
-  
   $data = $xml . $metagen . $meta . $dtd . $data ;
   
   if ($xml eq '') { $data =~ s/^\s+//gs ;}
@@ -159,6 +155,12 @@ sub data {
   _reset_sig_warn() ;
   return($data) ;
 }
+
+
+
+##################################################
+##            UNUSED - DEPRECATED.              ##
+##################################################
 
 
 sub _replace_data_with_lt { 

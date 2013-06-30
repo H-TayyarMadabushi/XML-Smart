@@ -11,15 +11,12 @@ t/base_tests.t
 t/boilerplate.t
 t/pod-coverage.t
 t/encode_tests.t
-t/use_lt_encode.t
 t/obj_copy_meta.t
 t/subtree_assign.t
 t/force_case_bug_fix.t
 t/base_tests_multi_obj.t
 t/base_tests_for_objcopy.t
-t/use_lt_encode_tree_gen.t
 t/base_tests_for_mem_leak.t
-t/base_tests_for_use_lt_encode.t
 data_for_tests/Tamil.data
 data_for_tests/Spanish.data
 data_for_tests/Random.data

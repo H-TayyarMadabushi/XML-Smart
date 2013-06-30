@@ -197,10 +197,6 @@ sub parse {
   
   if ( $args{use_spaces} ) { $xml->{SMART}{use_spaces} = 1 ;}
 
-  if ( $args{use_lt_clean} ) { 
-      $data = _clean_data_with_lt( $data ) ;
-  }
-
   $xml->{SMART}{on_start} = $args{on_start} if ref($args{on_start}) eq 'CODE' ;
   $xml->{SMART}{on_char}  = $args{on_char}  if ref($args{on_char})  eq 'CODE' ;
   $xml->{SMART}{on_end}   = $args{on_end}   if ref($args{on_end})   eq 'CODE' ;
@@ -220,10 +216,12 @@ sub parse {
   return( $tree ) ;
 }
 
-###########
-# GET_URL #
-###########
 
+
+
+##################################################
+##            UNUSED - DEPRECATED.              ##
+##################################################
 
 sub _clean_data_with_lt { 
 
@@ -341,6 +339,10 @@ sub _clean_data_with_lt {
 
 }
 
+
+###########
+# GET_URL #
+###########
 
 
 sub get_url {

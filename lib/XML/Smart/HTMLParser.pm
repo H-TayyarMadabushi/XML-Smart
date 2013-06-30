@@ -18,10 +18,6 @@ use strict                                                     ;
 use warnings                                                   ;
 
 use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
-use Data::Dump qw( dump ) ;
-BEGIN { 
-    print STDERR "HTMLParser.pm has debug code.\n";
-}
 
 our ($VERSION , @ISA) ;
 $VERSION = '1.11' ;

@@ -22,7 +22,7 @@ use XML::Smart::Entity qw(_add_basic_entity)                   ;
 use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 our ($VERSION , @ISA) ;
-$VERSION = '0.05' ;
+$VERSION = '0.06' ;
 
 @ISA = qw(Exporter) ;
 

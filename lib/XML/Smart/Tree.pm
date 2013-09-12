@@ -22,7 +22,7 @@ use XML::Smart::Shared qw( _unset_sig_warn _reset_sig_warn )   ;
 
 
 our ($VERSION) ;
-$VERSION = '1.32' ;
+$VERSION = '1.34' ;
 
 my %PARSERS = (
     XML_Parser           => 0 ,

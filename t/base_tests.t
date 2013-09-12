@@ -7,6 +7,7 @@ use ExtUtils::MakeMaker     ;
 
 use XML::Smart              ;
 
+
 my $DATA = q`<?xml version="1.0" encoding="iso-8859-1"?>
 <hosts>
     <server os="linux" type="redhat" version="8.0">
@@ -631,10 +632,6 @@ subtest 'XML::Smart::Parser Data populate test' => sub {
 
 subtest 'XML::Smart::Parser Data Populate Array test' => sub {
 
-  if( $] > 5.016 ) { 
-      plan skip_all => "Skip on $]" ;
-  }
-
   my $XML = XML::Smart->new('' , 'XML::Smart::Parser') ;
   
   $XML->{hosts}{server} = {
@@ -655,7 +652,7 @@ subtest 'XML::Smart::Parser Data Populate Array test' => sub {
       type => 'red'  ,
       ver => 123 ,
   } ;
-  
+
   $data = $XML->data(noheader => 1) ;
   $data =~ s/\s//gs ;
   
@@ -666,6 +663,7 @@ subtest 'XML::Smart::Parser Data Populate Array test' => sub {
   done_testing() ;
 
 } ;
+
 #########################
 
 

@@ -25,8 +25,8 @@ subtest 'URL Tests' => sub {
     
     my $file_XML = XML::Smart->new( 'tmp' , 'XML::Smart::Parser') ;
     
-    use Data::Dump ;
-    dd( $file_XML );
+    require Data::Dump          ;
+    Data::Dump::dd( $file_XML ) ;
 
     ok( $file_XML ) ;
 

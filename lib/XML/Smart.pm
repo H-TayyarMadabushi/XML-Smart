@@ -277,14 +277,14 @@ sub clone {
 	$i = shift ;
     }
     
-  my $clone = Object::MultiType->new(
-      boolsub   => \&boolean ,
-      scalarsub => \&content ,
-      tiearray  => 'XML::Smart::Tie::Array' ,
-      tiehash   => 'XML::Smart::Tie::Hash' ,
-      tieonuse  => 1 ,
-      code      => \&find_arg ,
-      ) ;
+    my $clone = Object::MultiType->new(
+	boolsub   => \&boolean ,
+	scalarsub => \&content ,
+	tiearray  => 'XML::Smart::Tie::Array' ,
+	tiehash   => 'XML::Smart::Tie::Hash' ,
+	tieonuse  => 1 ,
+	code      => \&find_arg ,
+	) ;
     bless($clone,__PACKAGE__) ;  
   
     if ( !$saver->is_saver ) { $saver = $$saver ;}
@@ -306,9 +306,10 @@ sub clone {
     
     if (!$pointer) { $pointer = $saver->{point} ;}
     
-    #my @call = caller ;
-    #print "CLONE>> $key , $i >> @{$saver->{keyprev}} >> @_\n" ;
-    
+    # my @call = caller ;
+    # print STDERR "CLONE>> $key , $i >> @{$saver->{keyprev}} >> @_\n" ;
+
+
     $$clone->{tree} = $saver->{tree} ;
     $$clone->{point} = $pointer ;
     $$clone->{back} = $back ;
@@ -330,7 +331,7 @@ sub clone {
     
     $$clone->{XPATH} = $saver->{XPATH} if $saver->{XPATH} ;
     
-  return( $clone ) ;
+    return( $clone ) ;
 
 }
 

@@ -34,8 +34,10 @@ our @EXPORT_OK = @EXPORT ;
 ########
 
 sub data {
+
   _unset_sig_warn() ;
   my $this = shift ;
+  
   my ( %args ) = @_ ;
   my $tree ;
   if( $args{tree} ) { 
@@ -44,37 +46,42 @@ sub data {
       $tree = $this->tree   ;
   }
   
-  {
-    my $addroot ;
-
-    if ( $args{root} || ref $tree ne 'HASH' ) { $addroot = 1 ;}
-    else {
-      my $ks = keys %$tree ;
-      my $n = 1 ;
-      if (ref $$tree{'/nodes'} eq 'HASH')  { ++$n ;}
-      if (ref $$tree{'/order'} eq 'ARRAY') { ++$n ;}
-      #if (ref $$tree{'/nodes'} eq 'HASH')  { ++$n if (keys %{$$tree{'/nodes'}}) ;}
-      #if (ref $$tree{'/order'} eq 'ARRAY') { ++$n if @{$$tree{'/order'}} ;}
-
-      if ($ks > $n) { $addroot = 1 ;}
+  { 
+      my $addroot ;
+      if ( $args{root} || ref $tree ne 'HASH' ) { $addroot = 1 ; }
       else {
-        my $k = (keys %$tree)[0] ;
-        if (ref $$tree{$k} eq 'ARRAY' && $#{$$tree{$k}} > 0) {
-          my ($c,$ok) ;
-          foreach my $i ( @{$$tree{$k}} ) {
-            if ( $i && &is_valid_tree($i) ) { $c++ ; $ok = $i ;}
-            if ($c > 1) { $addroot = 1 ; last ;}
-          }
-          if (!$addroot && $ok) { $$tree{$k} = $ok ;}
-        }
-        elsif (ref $$tree{$k} =~ /^(?:HASH|)$/) {$addroot = 1 ;}
+	  
+	  my $ks = keys %$tree ; ## WARNING ON ORDER ( Mostly harmless )!
+
+	  my $n = 1 ;
+	  if (ref $$tree{'/nodes'} eq 'HASH')  { ++$n ;}
+	  if (ref $$tree{'/order'} eq 'ARRAY') { ++$n ;}
+	  #if (ref $$tree{'/nodes'} eq 'HASH')  { ++$n if (keys %{$$tree{'/nodes'}}) ;}
+	  #if (ref $$tree{'/order'} eq 'ARRAY') { ++$n if @{$$tree{'/order'}} ;}
+	  
+	  if ($ks > $n) { $addroot = 1 ; }
+	  else {
+	      # Fix hash randomization bug Id:84929
+	      my %tmp = %$tree ;
+	      delete $tmp{ '/nodes' } ;
+	      delete $tmp{ '/order' } ;
+	      my $k = (keys %tmp)[0] ;
+	      if (ref $$tree{$k} eq 'ARRAY' && $#{$$tree{$k}} > 0) {
+		  my ($c,$ok) ;
+		  foreach my $i ( @{$$tree{$k}} ) {
+		      if ( $i && &is_valid_tree($i) ) { $c++ ; $ok = $i ;}
+		      if ($c > 1) { $addroot = 1 ; last ;}
+		  }
+		  if (!$addroot && $ok) { $$tree{$k} = $ok ;}
+	      }
+	      elsif (ref $$tree{$k} =~ /^(?:HASH|)$/) { $addroot = 1 ;}
+	  }
       }
-    }
-    
-    if ($addroot) {
-      my $root = $args{root} || 'root' ;
-      $tree = {$root => $tree} ;
-    }
+      
+      if ($addroot) {
+	  my $root = $args{root} || 'root' ;
+	  $tree = {$root => $tree} ;
+      }
   }
   
   if ( $args{lowtag} ) { $args{lowtag} = 1 ;}

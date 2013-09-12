@@ -2,8 +2,16 @@ Revision history for Perl extension XML::Smart.
 
 
 1.78
-    - Skipped Test 'XML::Smart::Parser Data Populate Array test' on all base_tests for perl V 5.17.x due to potential Perl Bug.
-    - asdf
+    - Fixed hash randomization bug Id:84929
+    - lib/XML/Smart.pm:  Formatting update, no changes to code. 
+    - lib/XML/Smart/Data.pm: Fixed hash randomization bug Id:84929
+    - lib/XML/Smart/Tree.pm: Formatting update, no changes to code. 
+    - Updated the following files to reflect bug fix:
+      	t/base_tests.t
+	t/base_tests_for_mem_leak.t
+    	t/base_tests_for_objcopy.t
+	t/base_tests_multi_obj.t
+	t/special_char_from_url.t
 
 1.77  2013-2-13
     - Rewrote tests with Test::More to prevent fails in OpenBSD, Fedora and some versions of Win.

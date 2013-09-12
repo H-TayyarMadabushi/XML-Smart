@@ -146,74 +146,74 @@ sub load {
 
 sub parse {
 
-  my $module = $_[1] ;
-  
-  my $data ;
-  {
-    my ($fh,$open) ;
+    my $module = $_[1] ;
     
-    if (ref($_[0]) eq 'GLOB') { $fh = $_[0] ;}
-    elsif ($_[0] =~ /^http:\/\/\w+[^\r\n]+$/s) { $data = &get_url($_[0]) ;}
-    elsif ($_[0] =~ /<.*?>/s) { $data = $_[0] ;}
-    else { 
-	open ($fh,$_[0]) or croak( $! ); binmode($fh) ; $open = 1 ;
+    my $data ;
+    {
+	my ($fh,$open) ;
+	
+	if (ref($_[0]) eq 'GLOB') { $fh = $_[0] ;}
+	elsif ($_[0] =~ /^http:\/\/\w+[^\r\n]+$/s) { $data = &get_url($_[0]) ;}
+	elsif ($_[0] =~ /<.*?>/s) { $data = $_[0] ;}
+	else { 
+	    open ($fh,$_[0]) or croak( $! ); binmode($fh) ; $open = 1 ;
+	}
+    
+	if ($fh) {
+	    no warnings ;
+	    1 while( read($fh, $data , 1024*8 , length($data) ) ) ;
+	    close($fh) if $open ;
+	}
     }
     
-    if ($fh) {
-	no warnings ;
-	1 while( read($fh, $data , 1024*8 , length($data) ) ) ;
-	close($fh) if $open ;
+    if ($data !~ /<.*?>/s) { return( {} ) ;}
+    
+    if (!$module || !$PARSERS{$module}) {
+	if    ( !$NO_XML_PARSER && $INC{'XML/Parser.pm'} && $PARSERS{XML_Parser}) { $module = 'XML_Parser' ;}
+	elsif ($PARSERS{XML_Smart_Parser}) { $module = 'XML_Smart_Parser' ;}
     }
-  }
   
-  if ($data !~ /<.*?>/s) { return( {} ) ;}
-
-  if (!$module || !$PARSERS{$module}) {
-    if    ( !$NO_XML_PARSER && $INC{'XML/Parser.pm'} && $PARSERS{XML_Parser}) { $module = 'XML_Parser' ;}
-    elsif ($PARSERS{XML_Smart_Parser}) { $module = 'XML_Smart_Parser' ;}
-  }
-  
-  my $xml ;
-  if ($module eq 'XML_Parser') { $xml = XML::Parser->new() ;}
-  elsif ($module eq 'XML_Smart_Parser') { $xml = XML::Smart::Parser->new() ;}
-  elsif ($module eq 'XML_Smart_HTMLParser') { $xml = XML::Smart::HTMLParser->new() ;}
-  else { croak("Can't find a parser for XML!") ;}
-  
-  shift(@_) ;
-  if ( $_[0] && ( $_[0] =~ /^\s*(?:XML_\w+|html?|re\w+|smart)\s*$/i ) ) { shift(@_) ;}
-
-  _unset_sig_warn() ;
-  my ( %args ) = @_ ;
-  _reset_sig_warn() ;
-  
-  if ( $args{lowtag} ) { $xml->{SMART}{tag} = 1 ;}
-  if ( $args{upertag} ) { $xml->{SMART}{tag} = 2 ;}
-  if ( $args{lowarg} ) { $xml->{SMART}{arg} = 1 ;}
-  if ( $args{uperarg} ) { $xml->{SMART}{arg} = 2 ;}
-  if ( $args{arg_single} ) { $xml->{SMART}{arg_single} = 1 ;}  
-
-  if ( $args{no_order} ) { $xml->{SMART}{no_order} = 1 ;}
-  if ( $args{no_nodes} ) { $xml->{SMART}{no_nodes} = 1 ;}
-  
-  if ( $args{use_spaces} ) { $xml->{SMART}{use_spaces} = 1 ;}
-
-  $xml->{SMART}{on_start} = $args{on_start} if ref($args{on_start}) eq 'CODE' ;
-  $xml->{SMART}{on_char}  = $args{on_char}  if ref($args{on_char})  eq 'CODE' ;
-  $xml->{SMART}{on_end}   = $args{on_end}   if ref($args{on_end})   eq 'CODE' ;
-  
-  $xml->setHandlers(
-  Init => \&_Init ,
-  Start => \&_Start ,
-  Char  => \&_Char ,
-  End   => \&_End ,
-  Final => \&_Final ,
-  ) ;
-
-  my $tree ;
-  eval { 
-      $tree = $xml->parse($data);
-  }; croak( $@ ) if( $@ );
-  return( $tree ) ;
+    my $xml ;
+    if ($module eq 'XML_Parser') { $xml = XML::Parser->new() ;}
+    elsif ($module eq 'XML_Smart_Parser') { $xml = XML::Smart::Parser->new() ;}
+    elsif ($module eq 'XML_Smart_HTMLParser') { $xml = XML::Smart::HTMLParser->new() ;}
+    else { croak("Can't find a parser for XML!") ;}
+    
+    shift(@_) ;
+    if ( $_[0] && ( $_[0] =~ /^\s*(?:XML_\w+|html?|re\w+|smart)\s*$/i ) ) { shift(@_) ;}
+    
+    _unset_sig_warn() ;
+    my ( %args ) = @_ ;
+    _reset_sig_warn() ;
+    
+    if ( $args{lowtag} ) { $xml->{SMART}{tag} = 1 ;}
+    if ( $args{upertag} ) { $xml->{SMART}{tag} = 2 ;}
+    if ( $args{lowarg} ) { $xml->{SMART}{arg} = 1 ;}
+    if ( $args{uperarg} ) { $xml->{SMART}{arg} = 2 ;}
+    if ( $args{arg_single} ) { $xml->{SMART}{arg_single} = 1 ;}  
+    
+    if ( $args{no_order} ) { $xml->{SMART}{no_order} = 1 ;}
+    if ( $args{no_nodes} ) { $xml->{SMART}{no_nodes} = 1 ;}
+    
+    if ( $args{use_spaces} ) { $xml->{SMART}{use_spaces} = 1 ;}
+    
+    $xml->{SMART}{on_start} = $args{on_start} if ref($args{on_start}) eq 'CODE' ;
+    $xml->{SMART}{on_char}  = $args{on_char}  if ref($args{on_char})  eq 'CODE' ;
+    $xml->{SMART}{on_end}   = $args{on_end}   if ref($args{on_end})   eq 'CODE' ;
+    
+    $xml->setHandlers(
+	Init => \&_Init ,
+	Start => \&_Start ,
+	Char  => \&_Char ,
+	End   => \&_End ,
+	Final => \&_Final ,
+	) ;
+    
+    my $tree ;
+    eval { 
+	$tree = $xml->parse($data);
+    }; croak( $@ ) if( $@ );
+    return( $tree ) ;
 }
 
 

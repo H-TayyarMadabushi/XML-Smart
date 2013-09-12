@@ -234,6 +234,7 @@ sub is_valid_tree {
   
   _reset_sig_warn() ;
   return $found ;
+
 }
 
 ###############
@@ -614,6 +615,7 @@ sub _check_key {
     my $k = $_[0] ;
     $k =~ s/^[.:-]+//s ;
     $k =~ s/[^\w\:\.\-]+/_/gs ;
+    _reset_sig_warn() ;
     return( $k ) ;
   }
   my $return_val = $_[0] ;

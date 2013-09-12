@@ -61,7 +61,7 @@ load XML from the Web ( just by using an URL as the file path ) and has an easy
 way to send XML data through sockets - just adding the length of the data in
 the <?xml?> header.
 
-You can use I<XML::Smart> with L<XML::Parser>, or with the 2 standart parsers of
+You can use I<XML::Smart> with L<XML::Parser>, or with the 2 standard parsers of
 XML::Smart:
 
 =over 10

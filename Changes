@@ -1,6 +1,9 @@
 Revision history for Perl extension XML::Smart.
 
 
+1.79 [Un-revised!]
+    - Added t/make_scalar.t for testing of scalar convert (Bug:89228)
+
 1.78 2013-9-12
     - Fixed hash randomization bug Id:84929
     - lib/XML/Smart.pm:  Formatting update, no changes to code. 

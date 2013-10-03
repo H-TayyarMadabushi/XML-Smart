@@ -12,7 +12,7 @@ use XML::Smart              ;
 
 
 
-subtest 'Copy' => sub {
+subtest 'Convert_to_Scalar' => sub {
 
     my $XML   = XML::Smart->new();
     $XML->{StatusUpdate}{19} = 'A350_CCWB_19';

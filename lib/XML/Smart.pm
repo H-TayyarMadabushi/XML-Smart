@@ -37,11 +37,11 @@ XML::Smart - A smart, easy and powerful way to access or create XML from fiels, 
 
 =head1 VERSION
 
-Version 1.78
+Version 1.79
 
 =cut
 
-our $VERSION = '1.78' ;
+our $VERSION = '1.79' ;
 
 =head1 SYNOPSIS
 
@@ -1156,7 +1156,10 @@ sub ret {
 	my ($back , $key , $i) = $this->back ;
 	
 	if(     $type =~ /\$$/  ) { 
-	    @ret = $back->{$key}[$i]->content ;
+
+	    my $val = $back->{$key}[$i]->content ;  ## Changed call to scalar context so content does break (bug:89228)
+	    @ret = ( $val );
+
 	} elsif( $type =~ /\@$/ ) {
 
 	    @ret = @{$back} ;
@@ -1174,7 +1177,10 @@ sub ret {
 	    return ;
 	}
 	
-	if    ($type =~ /\$$/) { @ret = $this->content ; }
+	if( $type =~ /\$$/ ) {                     ## Changed call to scalar context so content does break (bug:89228)
+	    my $val = $this->content  ; 
+	    @ret = ( $val )           ;
+	}    
 	elsif ($type =~ /\@$/) { @ret = @{$this}       ; }
 	elsif ($type =~ /\%$/) { @ret = %{$this}       ; }
 	elsif ($type =~ /\.$/) { @ret = $this->pointer ; }
@@ -1424,7 +1430,6 @@ sub content {
     } else {
 	return $content_to_return ;
     }
-
 }
 
 ########

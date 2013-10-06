@@ -21,6 +21,11 @@ WriteMakefile(
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Blah-*' },
-    LICENSE => 'perl'
+    LICENSE => 'perl',
+    META_MERGE => {
+        resources => {
+            repository => 'https://github.com/harishmadabushi/XML-Smart',
+        },
+    },
 );
 

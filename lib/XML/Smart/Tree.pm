@@ -153,7 +153,7 @@ sub parse {
 	my ($fh,$open) ;
 	
 	if (ref($_[0]) eq 'GLOB') { $fh = $_[0] ;}
-	elsif ($_[0] =~ /^http:\/\/\w+[^\r\n]+$/s) { $data = &get_url($_[0]) ;}
+	elsif ($_[0] =~ /^https?:\/\/\w+[^\r\n]+$/s) { $data = &get_url($_[0]) ;}
 	elsif ($_[0] =~ /<.*?>/s) { $data = $_[0] ;}
 	else { 
 	    open ($fh,$_[0]) or croak( $! ); binmode($fh) ; $open = 1 ;

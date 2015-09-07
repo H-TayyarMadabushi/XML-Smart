@@ -4,7 +4,7 @@
 ## Author:      Graciliano M. P.
 ## Modified by: Harish Madabushi
 ## Created:     10/05/2003
-## RCS-ID:
+## RCS-ID:      
 ## Copyright:   (c) 2003 Graciliano M. P.
 ## Licence:     This program is free software; you can redistribute it and/or
 ##              modify it under the same terms as Perl itself
@@ -13,7 +13,7 @@
 
 package XML::Smart                                             ;
 
-use 5.006                                                      ;
+use 5.006                                                      ; 
 
 use strict                                                     ;
 use warnings                                                   ;
@@ -46,13 +46,13 @@ our $VERSION = '1.79' ;
 =head1 SYNOPSIS
 
 This module provides an easy way to access/create XML data. It's based on a HASH
-tree created from the XML data, and enables dynamic access to it through the
-standard Perl syntax for Hash and Array, without necessarily caring about which
+tree created from the XML data, and enables dynamic access to it through the 
+standard Perl syntax for Hash and Array, without necessarily caring about which 
 you are working with. In other words, B<each point in the tree works as a Hash and
 an Array at the same time>!
 
-This module additionally provides special resources such as: search for nodes by
-attribute, select an attribute value in each multiple node,  change the returned
+This module additionally provides special resources such as: search for nodes by 
+attribute, select an attribute value in each multiple node,  change the returned 
 format, and so on.
 
 The module also automatically handles binary data (encoding/decoding to/from base64),
@@ -92,10 +92,10 @@ You can find some extra documents about I<XML::Smart> at:
 
   ## Create the object and load the file:
   my $XML = XML::Smart->new('file.xml') ;
-
+  
   ## Force the use of the parser 'XML::Smart::Parser'.
   my $XML = XML::Smart->new('file.xml' , 'XML::Smart::Parser') ;
-
+  
   ## Get from the web:
   my $XML = XML::Smart->new('http://www.perlmonks.org/index.pl?node_id=16046') ;
 
@@ -109,23 +109,23 @@ You can find some extra documents about I<XML::Smart> at:
   my $srv0_addr0 = $XML->{server}[0]{address}[0] ;
   ## ...or...
   my $srv0_addr0 = $XML->{server}{address} ;
-
+  
   ## Get the server where the attibute 'type' eq 'suse':
   my $server = $XML->{server}('type','eq','suse') ;
-
+  
   ## Get the address again:
   my $addr1 = $server->{address}[1] ;
   ## ...or...
   my $addr1 = $XML->{server}('type','eq','suse'){address}[1] ;
-
+  
   ## Get all the addresses of a server:
   my @addrs = @{$XML->{server}{address}} ;
   ## ...or...
   my @addrs = $XML->{server}{address}('@') ;
-
+  
   ## Get a list of types of all the servers:
   my @types = $XML->{server}('[@]','type') ;
-
+  
   ## Add a new server node:
   my $newsrv = {
   os      => 'Linux' ,
@@ -133,19 +133,19 @@ You can find some extra documents about I<XML::Smart> at:
   version => 8.9 ,
   address => [qw(192.168.3.201 192.168.3.202)]
   } ;
-
+  
   push(@{$XML->{server}} , $newsrv) ;
 
   ## Get/rebuild the XML data:
   my $xmldata = $XML->data ;
-
+  
   ## Save in some file:
   $XML->save('newfile.xml') ;
-
+  
   ## Send through a socket:
   print $socket $XML->data(length => 1) ; ## show the 'length' in the XML header to the
                                           ## socket know the amount of data to read.
-
+  
   __DATA__
   <?xml version="1.0" encoding="iso-8859-1"?>
   <hosts>
@@ -219,14 +219,14 @@ sub new {
     my $class = shift ;
     my $file  = shift ;
     my $parser = ($_[0] and $_[0] !~ /^(?:uper|low|arg|on|no|use)\w+$/i) ? shift(@_) : '' ;
-
+    
     my $this = Object::MultiType->new(
 	boolsub   => \&boolean ,
 	scalarsub => \&content ,
 	tiearray  => 'XML::Smart::Tie::Array' ,
 	tiehash   => 'XML::Smart::Tie::Hash' ,
 	tieonuse  => 1 ,
-	code      => \&find_arg ,
+	code      => \&find_arg , 
 	) ;
 
 
@@ -235,12 +235,12 @@ sub new {
     $parser = &XML::Smart::Tree::load($parser) ;
 
     if ( !($file) or $file eq '') { $$this->{tree} = {} ;}
-    else {
-	eval {
+    else { 
+	eval { 
 	    $$this->{tree} = &XML::Smart::Tree::parse($file,$parser,@_) ;
 	}; croak( $@ ) if( $@ );
     }
-
+    
     $$this->{point} = $$this->{tree} ;
     bless($this,$class) ;
 
@@ -253,22 +253,22 @@ sub new {
 #########
 
 sub clone {
-
+    
     my $saver = shift ;
-
+    
     my ($pointer , $back , $array , $key , $i , $null_clone) ;
-
+    
     if ($#_ == 0 && !ref $_[0]) {
 	my $nullkey = shift ;
 	$pointer = {} ;
 	$back = {} ;
 	$null_clone = 1 ;
-
+	
 	($i) = ( $nullkey =~ /(?:^|\/)\/\[(\d+)\]$/s );
 	($key) = ( $nullkey =~ /(.*?)(?:\/\/\[\d+\])?$/s );
 	if ($key =~ /^\/\[\d+\]$/) { $key = undef ;}
     }
-
+    
     else {
 	$pointer = shift ;
 	$back = shift ;
@@ -276,7 +276,7 @@ sub clone {
 	$key = shift ;
 	$i = shift ;
     }
-
+    
     my $clone = Object::MultiType->new(
 	boolsub   => \&boolean ,
 	scalarsub => \&content ,
@@ -285,27 +285,27 @@ sub clone {
 	tieonuse  => 1 ,
 	code      => \&find_arg ,
 	) ;
-    bless($clone,__PACKAGE__) ;
-
+    bless($clone,__PACKAGE__) ;  
+  
     if ( !$saver->is_saver ) { $saver = $$saver ;}
-
+    
     if (!$back) {
 	if (!$pointer) { $back = $saver->{back} ;}
 	else { $back = $saver->{point} ;}
     }
-
+    
     if (!$array && !$pointer) { $array = $saver->{array} ;}
-
+    
     my @keyprev ;
-
+    
     if (defined $key) { @keyprev = $key ;}
     elsif (defined $i) { @keyprev = "[$i]" ;}
-
+    
     if (!defined $key) { $key = $saver->{key} ;}
     if (!defined $i) { $i = $saver->{i} ;}
-
+    
     if (!$pointer) { $pointer = $saver->{point} ;}
-
+    
     # my @call = caller ;
     # print STDERR "CLONE>> $key , $i >> @{$saver->{keyprev}} >> @_\n" ;
 
@@ -316,21 +316,21 @@ sub clone {
     $$clone->{array} = $array ;
     $$clone->{key} = $key ;
     $$clone->{i} = $i ;
-
+    
     if ( @keyprev ) {
 	$$clone->{keyprev} = ( $saver->{keyprev} ) ? [@{$saver->{keyprev}}]  : [] ;
 	push(@{$$clone->{keyprev}} , @keyprev) ;
     }
-
+    
     if (defined $_[0]) { $$clone->{content} = \$_[0] ;}
-
+    
     if ( $null_clone || $saver->{null} ) {
 	$$clone->{null} = 1 ;
 	## $$clone->{self} = $clone ;
     }
-
+    
     $$clone->{XPATH} = $saver->{XPATH} if $saver->{XPATH} ;
-
+    
     return( $clone ) ;
 
 }
@@ -342,13 +342,13 @@ sub clone {
 sub boolean {
 
     my $this = shift ;
-
-    if ( $this->null ) {
+    
+    if ( $this->null ) { 
 	return 0 ;
     } else {
 	return 1 ;
     }
-
+    
 }
 
 ########
@@ -359,14 +359,14 @@ sub null {
 
     my $this = shift ;
 
-    if( $$this->{null} ) {
+    if( $$this->{null} ) { 
 	return 1 ;
     }
-
-    if( (keys %{$$this->{tree}}) < 1 ) {
+    
+    if( (keys %{$$this->{tree}}) < 1 ) { 
 	return 1 ;
     }
-
+    
     return ;
 
 }
@@ -378,21 +378,21 @@ sub null {
 sub base {
 
     my $this = shift ;
-
+    
     my $base = Object::MultiType->new(
 	boolsub   => \&boolean ,
 	scalarsub => \&content ,
 	tiearray  => 'XML::Smart::Tie::Array' ,
 	tiehash   => 'XML::Smart::Tie::Hash' ,
 	tieonuse  => 1 ,
-	code      => \&find_arg ,
+	code      => \&find_arg , 
 	) ;
-
+    
     bless($base,__PACKAGE__) ;
-
+    
     $$base->{tree} = $this->tree ;
     $$base->{point} = $$base->{tree} ;
-
+    
     return( $base ) ;
 
 }
@@ -404,35 +404,35 @@ sub base {
 sub back {
 
     my $this = shift ;
-
+    
     my @tree ;
-    if( $$this->{keyprev} ) {
+    if( $$this->{keyprev} ) { 
 	@tree = @{$$this->{keyprev}} ;
     }
-
-    if( !@tree ) {
+    
+    if( !@tree ) { 
 	return $this ;
     }
-
+    
     my $last = pop(@tree) ;
     my $i = 0 ;
-    if( $last =~ /^\[(\d+)\]$/ ) {
-	$i = $1 ;
+    if( $last =~ /^\[(\d+)\]$/ ) { 
+	$i = $1 ; 
 	$last = pop(@tree) ;
     }
-
+    
     my $back = $this->base ;
-
+    
     foreach my $tree_i ( @tree ) {
 	if ($tree_i =~ /^\[(\d+)\]$/) {
 	    my $i = $1 ;
 	    $back = $back->[$i] ;
-	} else {
+	} else { 
 	    $back = $back->{$tree_i} ;
 	}
     }
-
-    if ( wantarray ) {
+    
+    if ( wantarray ) { 
 	return( $back , $last , $i ) ;
     }
 
@@ -450,12 +450,12 @@ sub path {
     my @tree = @{$$this->{keyprev}} ;
 
     my $path ;
-
+    
     foreach my $tree_i ( @tree ) {
 	$path .= '/' if $tree_i !~ /^\[\d+\]$/ ;
 	$path .= $tree_i ;
     }
-
+    
     return $path ;
 
 }
@@ -468,26 +468,26 @@ sub path_as_xpath {
 
     my $this = shift ;
     my @tree = @{$$this->{keyprev}} ;
-
+    
     my $path ;
-
+    
     foreach my $tree_i ( @tree ) {
 	if ( $tree_i =~ /^\[(\d+)\]$/ ) {
 	    my $i = $1 + 1 ;
 	    $path .= "[$i]" ;
-	} else {
+	} else { 
 	    $path .= "/$tree_i" ;
 	}
     }
-
+    
     $path =~ s/\[1\]$// ;
-
+    
     my $t = $this->is_node ;
-
+    
     if ( !$this->is_node ) {
 	$path =~ s/\/([^\/]+)$/\/\@$1/s ;
     }
-
+    
     return $path ;
 
 }
@@ -499,9 +499,9 @@ sub path_as_xpath {
 sub root {
 
     my $this = shift ;
-
+    
     my $root = ( $this->base->nodes_keys )[0] ;
-
+    
     return $root ;
 
 }
@@ -517,7 +517,7 @@ sub key {
     if ($k =~ /^\[(\d+)\]$/) {
 	$k = @{$$this->{keyprev}}[ $#{$$this->{keyprev}} -1 ] ;
     }
-
+    
     return $k ;
 
 }
@@ -546,14 +546,14 @@ sub copy {
     my $copy = XML::Smart->new( $data, $$this->{ parser } ) ;
 
 
-    if( $$this->{keyprev} ) {
+    if( $$this->{keyprev} ) { 
 	my @old_array = @{ $$this->{keyprev} } ;
 	my @new_array = @old_array             ;
 	$$copy->{keyprev} = \@new_array        ;
     }
-
+    
     my ( $back , $key , $i ) = $copy->back ;
-
+    
     _unset_sig_warn() ;
     if( $key ne '' ) {
 	$copy = $back->{$key} ;
@@ -573,13 +573,13 @@ sub _copy_hash {
 
     my ( $ref ) = @_ ;
     my $copy         ;
-
+    
     if( ref $ref eq 'HASH' ) {
 	$copy = {} ;
 	foreach my $Key ( keys %$ref ) {
 	    if( ref $$ref{$Key} ) {
 		$$copy{$Key} =&_copy_hash($$ref{$Key}) ;
-	    } else {
+	    } else { 
 		$$copy{$Key} = $$ref{$Key} ;
 	    }
 	}
@@ -588,19 +588,19 @@ sub _copy_hash {
 	foreach my $i ( @$ref ) {
 	    if( ref $i ) {
 		push( @$copy, &_copy_hash($i) ) ;
-	    } else {
+	    } else { 
 		push( @$copy, $i ) ;
 	    }
 	}
     } elsif( ref $ref eq 'SCALAR' ) {
 	my $copy = $$ref ;
 	return( \$copy ) ;
-    } else {
+    } else { 
 	return( {} ) ;
     }
-
+    
     return( $copy ) ;
-
+    
 }
 
 ###########
@@ -619,7 +619,7 @@ sub pointer_ok {
     return _tree_ok_parse( &pointer ) ;
 }
 
-sub tree_pointer_ok {
+sub tree_pointer_ok { 
     &pointer_ok ;
 }
 
@@ -631,14 +631,14 @@ sub _tree_ok_parse {
 
     my ( $ref ) = @_ ;
     my $copy         ;
-
+  
     if( ref $ref eq 'HASH' ) {
 	$copy = {} ;
 	foreach my $Key ( keys %$ref ) {
 	    next if $Key eq '/order' || $Key eq '/nodes' || $Key =~ /\/\.CONTENT\// ;
 	    if( ref $$ref{$Key} ) {
 		$$copy{$Key} =&_tree_ok_parse($$ref{$Key}) ;
-	    } else {
+	    } else { 
 		$$copy{$Key} = $$ref{$Key} ;
 	    }
 	}
@@ -647,17 +647,17 @@ sub _tree_ok_parse {
 	foreach my $i ( @$ref ) {
 	    if( ref $i ) {
 		push( @$copy, &_tree_ok_parse($i) ) ;
-	    } else {
+	    } else { 
 		push( @$copy, $i                  ) ;
 	    }
 	}
     } elsif( ref $ref eq 'SCALAR' ) {
 	my $copy = $$ref ;
 	return( \$copy ) ;
-    } else {
+    } else { 
 	return( {} ) ;
     }
-
+    
     return( $copy ) ;
 
 }
@@ -666,15 +666,15 @@ sub _tree_ok_parse {
 # TREE #
 ########
 
-sub tree {
+sub tree { 
 
     my $hash_to_return = ${$_[0]}->{tree} ;
-
+    
     return ( $hash_to_return ) ;
-
+    
 }
 
-sub tree_pointer {
+sub tree_pointer { 
     &pointer ;
 }
 
@@ -712,11 +712,11 @@ sub dump_pointer_ok {
 }
 
 
-sub dump_tree_pointer {
+sub dump_tree_pointer { 
     &dump_pointer ;
 }
 
-sub dump_tree_pointer_ok {
+sub dump_tree_pointer_ok { 
     &dump_pointer_ok ;
 }
 
@@ -725,15 +725,15 @@ sub dump_tree_pointer_ok {
 ###########
 
 sub pointer {
-
+    
     my $hash_to_return ;
-
-    if ( ${$_[0]}->{content} ) {
+    
+    if ( ${$_[0]}->{content} ) { 
 	$hash_to_return = ${${$_[0]}->{content}} ;
     } else {
 	$hash_to_return = ${$_[0]}->{point}      ;
     }
-
+    
     return ( $hash_to_return ) ;
 }
 
@@ -744,13 +744,13 @@ sub pointer {
 sub cut_root {
 
     my $this = shift ;
-
+    
     my @nodes = $this->nodes_keys ;
-
-    if( $#nodes > 0 ) {
+    
+    if( $#nodes > 0 ) { 
 	return $this ;
     }
-
+    
     my $root = $nodes[0] ;
     return( $this->{$root} ) ;
 
@@ -765,13 +765,13 @@ sub is_node {
     my $this = shift ;
 
     return if $this->null ;
-
+    
     my $key  = $this->key  ;
     my $back = $this->back ;
-
+    
     return 1 if( $back->{'/nodes'}{$key} || $back->{$key}->nodes_keys ) ;
     return undef ;
-
+    
 }
 
 ########
@@ -783,27 +783,27 @@ sub args {
     my $this = shift ;
 
     return () if $this->null ;
-
+    
     my @args ;
-
+    
     my $nodes   = $this->back->{'/nodes'} ;
     my $pointer = $$this->{point}         ;
-
+    
     foreach my $Key ( keys %$this ) {
 
 	next if( $$nodes{$Key} ) ;
 
-	if(
-	    ( !ref $$pointer{ $Key} ) ||
-	    ( ref( $$pointer{ $Key} ) eq 'HASH') ||
-	    ( ref( $$pointer{ $Key} ) eq 'ARRAY' && $#{$$pointer{$Key}} == 0 )
+	if( 
+	    ( !ref $$pointer{ $Key} ) || 
+	    ( ref( $$pointer{ $Key} ) eq 'HASH') || 
+	    ( ref( $$pointer{ $Key} ) eq 'ARRAY' && $#{$$pointer{$Key}} == 0 ) 
 	    ) {
-
+	    
 	    push(@args , $Key) ;
-
+	    
 	}
     }
-
+    
     return @args ;
 }
 
@@ -814,19 +814,19 @@ sub args {
 sub args_values {
 
     my $this = shift ;
-
+    
     return () if $this->null ;
-
+    
     my @args = $this->args ;
-
+    
     my @values ;
-
+    
     foreach my $args_i ( @args ) {
 	push( @values, $this->{$args_i} ) ;
     }
-
+    
     return @values ;
-
+    
 }
 
 #########
@@ -836,20 +836,20 @@ sub args_values {
 sub nodes {
 
     my $this = shift ;
-
+    
     return () if $this->null ;
-
+    
     my $nodes   = $this->{'/nodes'}->pointer ;
     my $pointer = $$this->{point}            ;
-
+    
     my @nodes ;
-
+    
     foreach my $Key ( keys %$this ) {
 
-	if(
-	    $$nodes{$Key} ||
-	    (ref($$pointer{$Key}) eq 'HASH') ||
-	    (ref($$pointer{$Key}) eq 'ARRAY' && $#{$$pointer{$Key}} > 0)
+	if( 
+	    $$nodes{$Key} || 
+	    (ref($$pointer{$Key}) eq 'HASH') || 
+	    (ref($$pointer{$Key}) eq 'ARRAY' && $#{$$pointer{$Key}} > 0)  
 	    ) {
 
 	    if( ref($$pointer{$Key}) eq 'ARRAY' ) {
@@ -862,7 +862,7 @@ sub nodes {
 	    }
 	}
     }
-
+    
     return @nodes ;
 
 }
@@ -874,24 +874,24 @@ sub nodes {
 sub nodes_keys {
 
     my $this = shift ;
-
+    
     return () if $this->null ;
-
-
+    
+    
     my $nodes   = $this->{'/nodes'}->pointer ;
     my $pointer = $$this->{point}            ;
-
+    
     my @nodes ;
     foreach my $Key ( keys %$this ) {
-	if(
-	    $$nodes{$Key} ||
-	    (ref($$pointer{$Key}) eq 'HASH') ||
-	    (ref($$pointer{$Key}) eq 'ARRAY' && $#{$$pointer{$Key}} > 0)
+	if( 
+	    $$nodes{$Key} || 
+	    (ref($$pointer{$Key}) eq 'HASH') || 
+	    (ref($$pointer{$Key}) eq 'ARRAY' && $#{$$pointer{$Key}} > 0)  
 	    ) {
 	    push(@nodes , $Key) ;
 	}
     }
-
+    
     return @nodes ;
 }
 
@@ -903,32 +903,32 @@ sub set_node {
 
     my $this     = shift ;
     my ( $bool ) = @_    ;
-
-    if( !@_ ) {
+    
+    if( !@_ ) { 
 	$bool = 1 ;
     }
-
+    
     my $key  = $this->key  ;
     my $back = $this->back ;
-
+    
     $back->{'/nodes'} = {} if( $back->{'/nodes'}->null ) ;
     my $nodes = $back->{'/nodes'}->pointer ;
-
+    
     if( $bool ) {
 
-	if( $$nodes{$key} && $$nodes{$key} =~ /^(\w+,\d+),(\d*)/ ) {
+	if( $$nodes{$key} && $$nodes{$key} =~ /^(\w+,\d+),(\d*)/ ) { 
 	    $$nodes{$key} = "$1,1" ;
-	} else {
+	} else { 
 	    $$nodes{$key} = 1      ;
 	}
-
+      
 	if ( !$this->{CONTENT} ) {
 	    my $content = $this->content ;
 	    $this->{CONTENT} = $content if $content ne '' ;
 	}
 
     } else {
-
+	
 	delete $$nodes{$key} ;
 	my @keys = keys %$this ;
 	if( $#keys == 0 && $keys[0] eq 'CONTENT' ) {
@@ -936,14 +936,14 @@ sub set_node {
 	    $this->back->pointer->{$key} = $content ;
 	}
     }
-
+    
 }
 
 ###########
 # SET_TAG #
 ###########
 
-sub set_tag {
+sub set_tag { 
     &set_node ;
 }
 
@@ -973,26 +973,26 @@ sub set_node_type {
     my $this = shift ;
 
     my ( $type, $bool ) = @_ ;
-    if( $#_ < 1 ) {
+    if( $#_ < 1 ) { 
 	$bool = 1 ;
     }
-
+    
     my $key  = $this->key  ;
     my $back = $this->back ;
-
+    
     $back->{'/nodes'} = {} if( $back->{'/nodes'}->null );
     my $nodes = $back->{'/nodes'}->pointer ;
-
+    
     if( $bool ) {
 
 	if( $$nodes{$key} && $$nodes{$key} =~ /^\w+,\d+,(\d*)/ ) {
 	    my $val = $1                   ;
 	    $$nodes{$key} = "$type,1,$val" ;
-	} else {
+	} else { 
 	    my $existing_node_data = ( $$nodes{$key} ) ? $$nodes{$key} : "" ;
 	    $$nodes{$key} = "$type,1," . $existing_node_data ;
 	}
-
+	
 	if( !$this->{CONTENT} ) {
 	    my $content = $this->content ;
 	    $this->{CONTENT} = $content if $content ne '' ;
@@ -1003,9 +1003,9 @@ sub set_node_type {
 	if( !$$nodes{$key} ) {
 	    my $tp = _data_type( $back->{$key} ) ;
 	    if ( $tp > 2 ) { $$nodes{$key} = "$type,0," ;}
-	} elsif( $$nodes{$key} eq '1' ) {
+	} elsif( $$nodes{$key} eq '1' ) { 
 	    $$nodes{$key} = "$type,0,1" ;
-	} elsif( $$nodes{$key} =~ /^\w+,\d+,1/ ) {
+	} elsif( $$nodes{$key} =~ /^\w+,\d+,1/ ) { 
 	    $$nodes{$key} = "$type,0,1" ;
 	} elsif( $$nodes{$key} =~ /^\w+,\d+,0?$/ ) {
 
@@ -1019,7 +1019,7 @@ sub set_node_type {
 
 	}
     }
-
+    
 }
 
 #############
@@ -1047,16 +1047,16 @@ sub set_binary {
 sub set_auto_node {
 
     my $this = shift ;
-
+    
     my $key  = $this->key  ;
     my $back = $this->back ;
-
+    
     $back->{'/nodes'} = {} if( $back->{'/nodes'}->null );
     my $nodes = $back->{'/nodes'}->pointer ;
-
-    if( !$$nodes{$key} || $$nodes{$key} eq '1' ) {
-	# Do nothing. ;
-    } elsif( $$nodes{$key} =~ /^\w+,\d+,1/   ) {
+    
+    if( !$$nodes{$key} || $$nodes{$key} eq '1' ) { 
+	# Do nothing. ; 
+    } elsif( $$nodes{$key} =~ /^\w+,\d+,1/   ) { 
 	$$nodes{$key} = 1 ;
     } elsif( $$nodes{$key} =~ /^\w+,\d+,0?$/ ) {
 
@@ -1077,15 +1077,15 @@ sub set_auto_node {
 ############
 
 sub set_auto {
-
+    
     my $this = shift ;
-
+    
     my $key  = $this->key  ;
     my $back = $this->back ;
-
+    
     $back->{'/nodes'} = {} if $back->{'/nodes'}->null ;
     my $nodes = $back->{'/nodes'}->pointer ;
-
+    
     delete $$nodes{$key} ;
     my @keys = keys %$this ;
     if( $#keys == 0 && $keys[0] eq 'CONTENT') {
@@ -1109,24 +1109,24 @@ sub _data_type {
 
     my $data = shift ;
 
-    # TODO: 0x80, 0x81, 0x8d, 0x8f, 0x90, 0xa0
-    my @bin_data = (
-	0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8e, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96,
-	0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9e, 0x9f, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa,
-	0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc,
-	0xbd, 0xbe, 0xbf, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce,
-	0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf, 0xe0,
-	0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1, 0xf2,
-	0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff, 0x20,
+    # TODO: 0x80, 0x81, 0x8d, 0x8f, 0x90, 0xa0 
+    my @bin_data = (     
+	0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8e, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 
+	0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9e, 0x9f, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 
+	0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 
+	0xbd, 0xbe, 0xbf, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 
+	0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf, 0xe0, 
+	0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1, 0xf2, 
+	0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff, 0x20, 
 	);
 
 
     my $bin_string = join( '', ( map( pack("H*", $_), @bin_data ) ) ) ;
-
-    return 4 if( $data && (
-		     $data =~ /[^\w\d\s!"#\$\%&'\(\)\*\+,\-\.\/:;<=>\?\@\[\\\]\^\`\{\|}~~$bin_string]/s
-		     or
-		     $data =~ /(\240|\351|\361|\363|\341|\374|\340|\350|\366|\343|\355|\366|\344|\372|\364|\324|\301|\342)/s
+    
+    return 4 if( $data && ( 
+		     $data =~ /[^\w\d\s!"#\$\%&'\(\)\*\+,\-\.\/:;<=>\?\@\[\\\]\^\`\{\|}~~$bin_string]/s 
+		     or 
+		     $data =~ /(\240|\351|\361|\363|\341|\374|\340|\350|\366|\343|\355|\366|\344|\372|\364|\324|\301|\342)/s 
 		 )
 	) ;
     return 3 if( $data && $data =~ /<.*?>/s    ) ;
@@ -1142,20 +1142,20 @@ sub ret {
 
     my $this = shift ;
     my $type = shift ;
-
+    
     if ($type =~ /^\s*<xml>\s*$/si ) {
 	return $this->data_pointer( noheader => 1 ) ;
     }
-
+    
     my @ret ;
     $type =~ s/[^<\$\@\%\.k]//gs ;
-
+    
     if ($type =~ /^</) {
-	$type =~ s/^<+// ;
-
+	$type =~ s/^<+// ;    
+	
 	my ($back , $key , $i) = $this->back ;
-
-	if(     $type =~ /\$$/  ) {
+	
+	if(     $type =~ /\$$/  ) { 
 
 	    my $val = $back->{$key}[$i]->content ;  ## Changed call to scalar context so content does break (bug:89228)
 	    @ret = ( $val );
@@ -1167,20 +1167,20 @@ sub ret {
 	    foreach my $ret_i ( @ret ) {
 		$ret_i = $ret_i->{$key}[$i] ;
 	    }
-
-	} elsif( $type =~ /\%$/ ) {
+	    
+	} elsif( $type =~ /\%$/ ) { 
 	    @ret = %{$back->{$key}[$i]} ;
 	}
     } else {
 
-	if( $this->null ) {
+	if( $this->null ) { 
 	    return ;
 	}
-
+	
 	if( $type =~ /\$$/ ) {                     ## Changed call to scalar context so content does break (bug:89228)
-	    my $val = $this->content  ;
+	    my $val = $this->content  ; 
 	    @ret = ( $val )           ;
-	}
+	}    
 	elsif ($type =~ /\@$/) { @ret = @{$this}       ; }
 	elsif ($type =~ /\%$/) { @ret = %{$this}       ; }
 	elsif ($type =~ /\.$/) { @ret = $this->pointer ; }
@@ -1193,24 +1193,24 @@ sub ret {
 		if ($n > 0) {
 		    my @multi = ($key) x ($n+1) ;
 		    push(@ret , @multi) ;
-		} else {
+		} else { 
 		    push(@ret , $key) ;
 		}
 	    }
 
 	}
     }
-
+    
     if( $type =~ /^\$./ ) {
 	foreach my $ret_i ( @ret ) {
-	    if(ref($ret_i) eq 'XML::Smart') {
+	    if(ref($ret_i) eq 'XML::Smart') { 
 		$ret_i = $ret_i->content ;
 	    }
 	}
     }
+    
 
-
-    if( wantarray ) {
+    if( wantarray ) { 
 	return( @ret ) ;
     }
     return $ret[0] ;
@@ -1221,9 +1221,9 @@ sub ret {
 # FIND #
 ########
 
-sub find {
-    &find_arg
-}
+sub find { 
+    &find_arg 
+} 
 
 ############
 # FIND_ARG #
@@ -1232,37 +1232,37 @@ sub find {
 sub find_arg {
 
     my $this = shift ;
-    if( $#_ == 0 && ref($_[0]) ne 'ARRAY' ) {
+    if( $#_ == 0 && ref($_[0]) ne 'ARRAY' ) { 
 	return $this->ret(@_) ;
     }
-
+    
     if( $#_ == 1 && $_[0] eq '[@]'        ) {
 	my $arg = $_[1] ;
 	return $this->{$arg}('<@') ;
     }
-
+    
     my @search ;
-
+  
     for( my $i = 0; $i <= $#_ ; ++$i ) {
-	if( ref($_[$i]) eq 'ARRAY' ) {
+	if( ref($_[$i]) eq 'ARRAY' ) { 
 	    push(@search , $_[$i]) ;
 	} elsif( ref($_[$i]) ne 'ARRAY' && ref($_[$i+1]) ne 'ARRAY' && ref($_[$i+2]) ne 'ARRAY' ) {
 	    push(@search , [$_[$i] , $_[$i+1] , $_[$i+2]]) ;
 	    $i += 2 ;
 	}
     }
-
+    
     #use Data::Dumper ; print Dumper(\@search);
     #print "*** @search\n" ;
-
-    if ( !@search ) {
+    
+    if ( !@search ) { 
 	return ;
     }
-
+    
     my $key = $$this->{key} ;
-
+    
     my @hashes ;
-
+    
     if( ref($$this->{array}) ) {
 	push( @hashes, @{$$this->{array}} ) ;
     } else {
@@ -1275,28 +1275,28 @@ sub find_arg {
 	    }
 	}
     }
-
+    
     my $i = -1 ;
     my (@hash , @i) ;
     my $notwant = !wantarray ;
-
+    
     foreach my $hash_i ( @hashes ) {
 
 	foreach my $search_i ( @search ) {
 
 	    my ($name , $type , $value) = @{$search_i} ;
 	    $type =~ s/\s//gs ;
-
+	    
 	    $i++ ;
 	    my $hash ;
 	    if (ref $hash_i eq 'ARRAY') { $hash = @$hash_i[1] ;}
 	    else { $hash = $hash_i ;}
-
+	    
 	    my $data ;
 	    if ($name =~ /^content$/i) { $name = 'CONTENT' ;}
 	    $data = ref($hash) eq 'HASH' ? $$hash{$name} : $hash ;
 	    $data = $$data{CONTENT} if ref($data) eq 'HASH' ;
-
+	    
 	    _unset_sig_warn() ;
 	    if    ($type eq 'eq'  && $data eq $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
 	    elsif ($type eq 'ne'  && $data ne $value)     { push(@hash,$hash_i) ; push(@i,$i) ; last ;}
@@ -1313,15 +1313,15 @@ sub find_arg {
 	    _reset_sig_warn() ;
 	}
 
-	if( $notwant && @hash ) {
+	if( $notwant && @hash ) { 
 	    last ;
 	}
     }
-
+    
     my $back = $$this->{back} ;
-
+    
     #print "FIND>> @{$$this->{keyprev}} >> $i\n" ;
-
+    
     if( @hash ) {
 	if( $notwant ) {
 	    my ($k,$hash) = (undef) ;
@@ -1335,13 +1335,13 @@ sub find_arg {
 		$c++ ;
 		my ($k,$hash) = (undef) ;
 		if (ref $hash_i eq 'ARRAY') { ($k,$hash) = @{$hash_i} ;}
-		else { $hash = $hash_i ;}
+		else { $hash = $hash_i ;}        
 		$hash_i = &XML::Smart::clone($this,$hash,$back,undef, $k,$i[$c]) ;
 	    }
 	    return( @hash ) ;
 	}
     }
-
+    
     if (wantarray) { return() ;}
     return &XML::Smart::clone($this,'') ;
 }
@@ -1353,13 +1353,13 @@ sub content {
 
     my $this = shift ;
     my $set_i = $#_ > 0 ? shift : undef ;
-
+  
     if ( $this->null ) {
 	&XML::Smart::Tie::_generate_nulltree( $$this ) ;
     }
-
+  
     ##use Data::Dumper; print Dumper($$this) ;
-
+  
     my $content_to_return ;
     if ( defined $$this->{content} and ( !defined( $content_to_return ) ) ) {
 	if (@_) { ${$$this->{content}} = $_[0] ;}
@@ -1368,51 +1368,51 @@ sub content {
 
     my $key = 'CONTENT' ;
     my $i = $$this->{i} ;
-
+  
     if( ( ref($$this->{point}) eq 'ARRAY' ) and ( !defined( $content_to_return ) ) ) {
 	$content_to_return = $this->[0]->content($set_i,@_) ;
     }
 
-    if( ( ref($$this->{point}) ne 'HASH' ) and ( !defined( $content_to_return ) ) ) {
+    if( ( ref($$this->{point}) ne 'HASH' ) and ( !defined( $content_to_return ) ) ) { 
 	$content_to_return = '' ;
     }
-
+  
     if( ( !exists $$this->{point}{$key} ) and ( !defined( $content_to_return ) ) ) {
-	if( @_ ) {
+	if( @_ ) { 
 	    $content_to_return = $$this->{point}{$key} = $_[0] ;
 	} else {
 	    $content_to_return = '' ;
 	}
     }
-
-    if( defined( $content_to_return ) ) {
+  
+    if( defined( $content_to_return ) ) { 
 	return $content_to_return ;
     }
 
-
+  
     if( ( ref($$this->{point}{$key}) eq 'ARRAY' ) and ( !defined( $content_to_return ) ) ) {
 
-	if($i eq '') {
+	if($i eq '') { 
 	    $i = 0 ;
 	}
 
-	if(@_) {
+	if(@_) { 
 	    $$this->{point}{$key}[$i] = $_[0] ;
 	}
 
 	$content_to_return = $$this->{point}{$key}[$i] ;
 
     } elsif( ( exists $$this->{point}{$key} ) and ( !defined( $content_to_return ) ) ) {
-
+	
 	if ( @_ ) {
-	    if ( my $tie = tied($$this->{point}{$key}) ) {
+	    if ( my $tie = tied($$this->{point}{$key}) ) { 
 		$tie->STORE($set_i , $_[0]) ;
-	    } else {
+	    } else { 
 		$$this->{point}{$key} = $_[0] ;
 	    }
 	}
 
-	if( wantarray && ( my $tie = tied($$this->{point}{$key} ) ) ) {
+	if( wantarray && ( my $tie = tied($$this->{point}{$key} ) ) ) { 
 	    my @tmp = $tie->FETCH(1)   ;
 	    $content_to_return = \@tmp ;
 	} else {
@@ -1421,18 +1421,14 @@ sub content {
 
     }
 
-    unless( defined( $content_to_return ) ) {
+    unless( defined( $content_to_return ) ) { 
 	$content_to_return = '' ;
     }
-
-    if( wantarray ) {
-        if(ref($content_to_return) eq ''){ #If they want this as an array but it's a scalar wrap in an array
-            my @tmp = ($content_to_return);
-            return @tmp;
-        }
-        return @{ $content_to_return } ;
+  
+    if( wantarray ) { 
+	return @{ $content_to_return } ;
     } else {
-        return $content_to_return ;
+	return $content_to_return ;
     }
 }
 
@@ -1444,21 +1440,21 @@ sub save {
 
     my $this = shift ;
     my $file = shift ;
-
-    if(-d $file || (-e $file && !-w $file)) {
+    
+    if(-d $file || (-e $file && !-w $file)) { 
 	return ;
     }
-
+    
     my( $data, $unicode ) = $this->data(@_) ;
-
+    
     my $fh ;
-    open($fh,">$file") ;
+    open($fh,">$file") ; 
     binmode($fh) if $unicode ;
     print $fh $data ;
     close($fh) ;
-
+    
     return( 1 ) ;
-
+    
 }
 
 ################
@@ -1468,12 +1464,12 @@ sub save {
 sub data_pointer {
 
     my $this = shift ;
-    if( $this->null ) {
+    if( $this->null ) { 
 	return ;
     }
-
+    
     my( $point, $key ) ;
-
+    
     if ( exists $$this->{content} ) {
 	my $back = $this->back ;
 	my $root = $back->key ;
@@ -1485,9 +1481,9 @@ sub data_pointer {
 	$point = $$this->{point} ;
 	$key = $this->key ;
     }
-
+    
     $this->data( tree => $point , root => $key , @_) ;
-
+    
 }
 
 ###########
@@ -1497,90 +1493,90 @@ sub data_pointer {
 sub DESTROY {
 
     my $this = shift ;
-
+    
     if( $$this->{ DEV_DEBUG } ) {
 	require Devel::Cycle ;
 	my $circ_ref = 0     ;
 	my $tmp = Devel::Cycle::find_cycle(
-	    $this,
+	    $this, 
 	    sub {
 		my $path = shift;
 		foreach (@$path) {
 		    my ($type,$index,$ref,$value) = @$_;
 		    $circ_ref = 1 ;
-
+		    
 		}
-
+		
 	    });
-
-	if( $circ_ref ) {
+	
+	if( $circ_ref ) { 
 	    $this->ANNIHILATE() ;
-	    my $tmp = Devel::Cycle::find_cycle(
-		$this,
+	    my $tmp = Devel::Cycle::find_cycle( 
+		$this, 
 		sub {
 		    print STDERR "Circular reference found while destroying object - AFTER ANNIHILATE\n" ;
 		});
 	}
-    }
-
-    $$this->clean if( $this && $$this ) ; # In case object was messed with ( bug 62091 )
-
-
+    } 
+    
+    $$this->clean if( $this && $$this ) ; # In case object was messed with ( bug 62091 ) 
+    
+    
 }
 
 sub ANNIHILATE {
-
+    
     my $this = shift ;
     my $base = shift ;
-
-    if( ref $$this->{ point } eq 'HASH' ) {
+    
+    if( ref $$this->{ point } eq 'HASH' ) { 
 	my %clean ;
 	$$this->{ point } = \%clean ;
-    } else {
+    } else { 
 	$this->{ point }->ANNIHILATE( ) ;
     }
-
-    if( ref $$this->{ tree } eq 'HASH' ) {
+    
+    if( ref $$this->{ tree } eq 'HASH' ) { 
 	my %clean ;
 	$$this->{ tree } = \%clean ;
-    } else {
+    } else { 
       $this->{ tree }->ANNIHILATE( ) ;
     }
-
-
-    if( ref $$this->{ back } eq 'HASH' ) {
+    
+    
+    if( ref $$this->{ back } eq 'HASH' ) { 
 	my %clean ;
 	$$this->{ back } = \%clean ;
-    } else {
+    } else { 
 	$this->{ back }->ANNIHILATE( ) ;
     }
-
-    if( $$this->{ XPATH } ) { # and ( ref $$this->{ XPATH } eq 'XML::XPath' ) ) {
+    
+    if( $$this->{ XPATH } ) { # and ( ref $$this->{ XPATH } eq 'XML::XPath' ) ) { 
 	my $xpath = $$this->{ XPATH } ;
 	$$xpath->cleanup() ;
 	my $context = $$xpath->{ _context } ;
 	my $context_ref = ref $context ;
 	if( $context_ref =~ /XML\:\:XPath\:\:Node\:\:/ ) {
 	    _xml_xpath_clean( $context ) ;
-	}
+	} 
     }
-
+    
     $$this->DESTROY();
 
     return 1 ;
-
+    
 }
 
 
-sub _xml_xpath_clean {
-
+sub _xml_xpath_clean { 
+    
     my $path = shift ;
-
+    
     $path->dispose() ;
     # Data::Structure::Util::unbless( $path ) ;
-
+    
     return ;
-
+    
 }
 
 ###################
@@ -1682,7 +1678,7 @@ Make the arguments uper case.
 
 =item arg_single
 
-Set the value of arguments to 1 when they have a I<undef> value.
+Set the value of arguments to 1 when they have a I<undef> value. 
 
 I<** This option will work only when the XML is parsed by B<XML::Smart::HTMLParser>, since it accept arguments without values:>
 
@@ -1734,9 +1730,9 @@ I<** This options are applied when the XML data is loaded. For XML generation se
 B<Examples of use:>
 
   my $xml_from_url = XML::Smart->new("http://www.perlmonks.org/index.pl?node_id=16046") ;
-
+  
   ...
-
+  
   my $xml_from_str = XML::Smart->new(q`<?xml version="1.0" encoding="iso-8859-1" ?>
   <root>
     <foo arg="xyz"/>
@@ -1832,12 +1828,12 @@ Return the content of a node:
 
   ## Data:
   <foo>my content</foo>
-
+  
   ## Access:
-
+  
   my $content = $XML->{foo}->content ;
   print "<<$content>>\n" ; ## show: <<my content>>
-
+  
   ## or just:
   my $content = $XML->{foo} ;
 
@@ -1860,7 +1856,7 @@ Output:
 
   [
   content0
-
+  
   content1
   ]
 
@@ -1900,7 +1896,7 @@ Return a copy of the XML::Smart object (pointing to the base).
 ** This is good when you want to keep 2 versions of the same XML tree in the memory,
 since one object can't change the tree of the other!
 
-B<WARNING:> set_node(), set_cdata() and set_binary() changes are not persistent over copy -
+B<WARNING:> set_node(), set_cdata() and set_binary() changes are not persistent over copy - 
 Once you create a second copy these states are lost.
 
 b<warning:> do not copy after apply_dtd() unless you have checked for dtd errors.
@@ -1910,7 +1906,7 @@ b<warning:> do not copy after apply_dtd() unless you have checked for dtd errors
 Cut the root key:
 
   my $srv = $XML->{rootx}{host}{server} ;
-
+  
   ## Or if you don't know the root name:
   $XML = $XML->cut_root() ;
   my $srv = $XML->{host}{server} ;
@@ -1979,7 +1975,7 @@ Set the meta tags of the XML document.
 As of VERSION 1.73 there are three different base64 encodings that are used. They are picked
 based on which of them support the data provided. If you want to retrieve data using the 'data' function
 the resultant xml will have dt:dt="binary.based" contained within it. To retrieve the decoded data
-use: $XML->data( decode => 1 )
+use: $XML->data( decode => 1 ) 
 
 
 Examples:
@@ -1988,9 +1984,9 @@ Examples:
     build_from => "wxWindows 2.4.0" ,
     file => "wx26.htm" ,
     } ;
-
+    
     print $XML->data( meta => $meta ) ;
-
+    
     __DATA__
     <?meta build_from="wxWindows 2.4.0" file="wx283.htm" ?>
 
@@ -2000,7 +1996,7 @@ Multiple meta:
     {build_from => "wxWindows 2.4.0" , file => "wx26.htm" } ,
     {script => "genxml.pl" , ver => "1.0" } ,
     ] ;
-
+    
     __DATA__
     <?meta build_from="wxWindows 2.4.0" file="wx26.htm" ?>
     <?meta script="genxml.pl" ver="1.0" ?>
@@ -2011,7 +2007,7 @@ Or set directly the meta tag:
 
     ## For multiple:
     my $meta = ['<?meta foo="bar" ?>' , '<?meta x="1" ?>'] ;
-
+    
     print $XML->data( meta => $meta ) ;
 
 =item tree
@@ -2194,12 +2190,12 @@ Return a XML::XPath object, based in the XML root in the tree.
 
 I<** Need XML::XPath installed, but only load when is needed.>
 
-=head2  xpath_pointer() || XPath_pointer()
+=head2  xpath_pointer() || XPath_pointer() 
 
 Return a XML::XPath object, based in the XML::Smart pointer in the tree.
 
   ## look from this point, soo XPath '/' actually starts at /server/:
-
+  
   my $srvs = $XML->{server} ;
   my $data = $srvs->XPath_pointer->findnodes_as_string('/') ;
 
@@ -2208,8 +2204,8 @@ I<** Need XML::XPath installed, but only load when is needed.>
 
 =head2 ANNIHILATE
 
-XML::Smart uses XML::XPath that, for perfomance reasons, leaks memory. The ensure that this memory is freed you can
-explicitly call ANNIHILATE before the XML::Smart object goes out of scope.
+XML::Smart uses XML::XPath that, for perfomance reasons, leaks memory. The ensure that this memory is freed you can 
+explicitly call ANNIHILATE before the XML::Smart object goes out of scope. 
 
 
 =head1 ACCESS
@@ -2217,17 +2213,17 @@ explicitly call ANNIHILATE before the XML::Smart object goes out of scope.
 To access the data you use the object in a way similar to HASH and ARRAY:
 
   my $XML = XML::Smart->new('file.xml') ;
-
+  
   my $server = $XML->{server} ;
 
 But when you get a key {server}, you are actually accessing the data through tie(),
-not directly to the HASH tree inside the object, (This will fix wrong accesses):
+not directly to the HASH tree inside the object, (This will fix wrong accesses): 
 
   ## {server} is a normal key, not an ARRAY ref:
 
   my $server = $XML->{server}[0] ; ## return $XML->{server}
   my $server = $XML->{server}[1] ; ## return UNDEF
-
+  
   ## {server} has an ARRAY with 2 items:
 
   my $server = $XML->{server} ;    ## return $XML->{server}[0]
@@ -2265,7 +2261,7 @@ Can be
 For REGEX:
 
   =~  !~
-
+  
   ## Case insensitive:
   =~i !~i
 
@@ -2294,7 +2290,7 @@ Without the resource:
 
   my @list ;
   my @servers = @{$XML->{server}} ;
-
+  
   foreach my $servers_i ( @servers ) {
     push(@list , $servers_i->{type} ) ;
   }
@@ -2313,31 +2309,31 @@ Where TYPE can be:
   @  ## an array (list of multiple values).
   %  ## a hash.
   .  ## The exact point in the tree, not an object.
-
+  
   $@  ## an array, but with the content, not an objects.
   $%  ## a hash, but the values are the content, not an object.
-
+  
   ## The use of $@ and $% is good if you don't want to keep the object
   ## reference (and save memory).
-
+  
   @keys  ## The keys of the node. note that if you have a key with
          ## multiple nodes, it will be replicated (this is the
          ## difference of "keys %{$this->{node}}" ).
 
   <@ ## Return the attribute in the previous node, but looking for
      ## multiple nodes. Example:
-
+     
   my @names = $this->{method}{wxFrame}{arg}{name}('<@') ;
   #### @names = (parent , id , title) ;
-
+  
   <xml> ## Return a XML data from this point.
-
+     
   __DATA__
   <method>
     <wxFrame return="wxFrame">
-      <arg name="parent" type="wxWindow" />
-      <arg name="id" type="wxWindowID" />
-      <arg name="title" type="wxString" />
+      <arg name="parent" type="wxWindow" /> 
+      <arg name="id" type="wxWindowID" /> 
+      <arg name="title" type="wxString" /> 
     </wxFrame>
   </method>
 
@@ -2350,18 +2346,18 @@ Example:
   ## ... or:
   my $name = $XML->{server}{name} ;
   $name = "$name" ;
-
+  
   ## All the servers
   my @servers = $XML->{server}('@') ;
   ## ... or:
   my @servers = @{$XML->{server}} ;
-
+  
   ## It still has the object reference:
   @servers[0]->{name} ;
-
+  
   ## Without the reference:
   my @servers = $XML->{server}('$@') ;
-
+  
   ## A XML data, same as data_pointer():
   my $xml_data = $XML->{server}('<xml>') ;
 
@@ -2389,7 +2385,7 @@ to care with multiple nodes, and ARRAY creation/convertion!
 
   ## Create a null XML object:
   my $XML = XML::Smart->new() ;
-
+  
   ## Add a server to the list:
   $XML->{server} = {
   os => 'Linux' ,
@@ -2397,14 +2393,14 @@ to care with multiple nodes, and ARRAY creation/convertion!
   version => 8.9 ,
   address => '192.168.3.201' ,
   } ;
-
+  
   ## The data now:
   <server address="192.168.3.201" os="Linux" type="mandrake" version="8.9"/>
-
+  
   ## Add a new address to the server. Have an ARRAY creation, convertion
   ## of the previous key to ARRAY:
   $XML->{server}{address}[1] = '192.168.3.202' ;
-
+  
   ## The data now:
   <server os="Linux" type="mandrake" version="8.9">
     <address>192.168.3.201</address>
@@ -2415,10 +2411,10 @@ After create your XML tree you just save it or get the data:
 
   ## Get the data:
   my $data = $XML->data ;
-
+  
   ## Or save it directly:
   $XML->save('newfile.xml') ;
-
+  
   ## Or send to a socket:
   print $socket $XML->data(length => 1) ;
 
@@ -2443,22 +2439,22 @@ detected using these rules:
   - If your data has characters that can't be in XML.
 
   * Characters accepted:
-
+    
     \s \w \d
     !"#$%&'()*+,-./:;<=>?@[\]^`{|}~
-    0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8e, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96,
-    0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9e, 0x9f, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa,
-    0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc,
-    0xbd, 0xbe, 0xbf, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce,
-    0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf, 0xe0,
-    0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1, 0xf2,
+    0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8e, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 
+    0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9e, 0x9f, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 
+    0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 
+    0xbd, 0xbe, 0xbf, 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 
+    0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf, 0xe0, 
+    0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1, 0xf2, 
     0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff, 0x20
 
-  TODO: 0x80, 0x81, 0x8d, 0x8f, 0x90, 0xa0
-
+  TODO: 0x80, 0x81, 0x8d, 0x8f, 0x90, 0xa0 
+  
   CDATA:
   - If have tags: <...>
-
+  
   CONTENT: (<tag>content</tag>)
   - If have \r\n\t, or ' and " at the same time.
 
@@ -2480,7 +2476,7 @@ attribute added in the tag to tell the format.
 B<NOTE:> As of VERSION 1.73 there are three different base64 encodings that are used. They are picked
 based on which of them support the data provided. If you want to retrieve data using the 'data' function
 the resultant xml will have dt:dt="binary.based" contained within it. To retrieve the decoded data
-use: $XML->data( decode => 1 )
+use: $XML->data( decode => 1 ) 
 
 =head1 UNICODE and ASCII-extended (ISO-8859-1)
 
@@ -2509,19 +2505,19 @@ The differences between an normal XML parser and I<XML::Smart::HTMLParser> are:
 
   - Accept values without quotes:
     <foo bar=x>
-
+    
   - Accept any data in the values, including <> and &:
     <root><echo sample="echo \"Hello!\">out.txt"></root>
-
+    
   - Accpet URI values without quotes:
     <link url=http://www.foo.com/dir/file?query?q=v&x=y target=#_blank>
-
+  
   - Don't need to close the tags adding the '/' before '>':
     <root><foo bar="1"></root>
-
+    
     ** Note that the parse will try hard to detect the nodes, and where
        auto-close or not.
-
+  
   - Don't need to have only one root:
     <foo>data</foo><bar>data</bar>
 
@@ -2548,7 +2544,7 @@ will be parsed:
   &amp;  => The ampersand (&).
   &apos; => The single quote or apostrophe (').
   &quot; => The double quote (").
-
+  
   &#ddd;  => An ASCII character or an Unicode character (>255). Where ddd is a decimal.
   &#xHHH; => An Unicode character. Where HHH is in hexadecimal.
 
@@ -2570,7 +2566,7 @@ an ARRAY. You also have other extra resources, like a search for nodes by attrib
 
   ## Instead of:
   my $server = $XML->{server}[1] ;
-
+  
   __DATA__
   <hosts>
     <server os="linux" type="redhat" version="8.0">
@@ -2588,16 +2584,16 @@ The first idea was to access using something like:
 
   X = XML.foo.bar*
   X.baz{arg1}
-
+  
   XML.hosts.server[0]{argx}
 
 And saw that this is very similar to Hashes and Arrays in Perl:
 
   $XML->{foo}{bar}{baz}{arg1} ;
-
+  
   $X = $XML->{foo}{bar} ;
   $X->{baz}{arg1} ;
-
+  
   $XML->{hosts}{server}[0]{argx} ;
 
 But the problem of Hash and Array, is not knowing when you have an Array reference or not.
@@ -2615,16 +2611,16 @@ With it you can have an object that works at the same time as a HASH, ARRAY, SCA
 CODE & GLOB. So you can do things like this with the same object:
 
   $obj = Object::MultiType->new() ;
-
+  
   $obj->{key} ;
   $obj->[0] ;
-  $obj->method ;
-
+  $obj->method ;  
+  
   @l = @{$obj} ;
   %h = %{$obj} ;
-
+  
   &$obj(args) ;
-
+  
   print $obj "send data\n" ;
 
 Seems to be crazy, and can be more if you use tie() inside it, and this is what I<XML::Smart> does.
@@ -2636,15 +2632,15 @@ as the index 0 of an Array, or access an index 0 as the Hash key>:
   %hash = (
   key => ['a','b','c']
   ) ;
-
+  
   $hash->{key}    ## return $hash{key}[0]
-  $hash->{key}[0] ## return $hash{key}[0]
+  $hash->{key}[0] ## return $hash{key}[0]  
   $hash->{key}[1] ## return $hash{key}[1]
-
+  
   ## Inverse:
-
+  
   %hash = ( key => 'a' ) ;
-
+  
   $hash->{key}    ## return $hash{key}
   $hash->{key}[0] ## return $hash{key}
   $hash->{key}[1] ## return undef
@@ -2659,17 +2655,17 @@ For example:
   <hosts>
     <server address="192.168.2.100" os="linux" type="conectiva" version="9.0"/>
   </hosts>
-
+  
   ## Now you have {address} as a normal key with a string inside:
   $XML->{hosts}{server}{address}
-
+  
   ## And to add a new address, the key {address} need to be an ARRAY ref!
   ## So, XML::Smart make the convertion: ;-P
   $XML->{hosts}{server}{address}[1] = '192.168.2.101' ;
-
+  
   ## Adding to a list that you don't know the size:
   push(@{$XML->{hosts}{server}{address}} , '192.168.2.102') ;
-
+  
   ## The data now:
   <hosts>
     <server os="linux" type="conectiva" version="9.0"/>
@@ -2688,7 +2684,7 @@ B<But note that I<XML::Smart> always return an object>! Even when you get a fina
 key. So this actually returns another object, pointhing (inside it) to the key:
 
   $addr = $XML->{hosts}{server}{address}[0] ;
-
+  
   ## Since $addr is an object you can TRY to access more data:
   $addr->{foo}{bar} ; ## This doens't make warnings! just return UNDEF.
 
@@ -2704,7 +2700,7 @@ key. So this actually returns another object, pointhing (inside it) to the key:
   * DTD - Handle <!DOCTYPE> gracefully.
   * Implement a better way to declare meta tags.
   * Add 0x80, 0x81, 0x8d, 0x8f, 0x90, 0xa0 ( multi byte characters to the list of accepted binary characters )
-  * Ensure object copy holds more in state including: ->data( wild => 1 )
+  * Ensure object copy holds more in state including: ->data( wild => 1 ) 
 
 
 
